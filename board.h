@@ -3,6 +3,9 @@
 
 #include <bitset>
 #include "common.h"
+#include <vector>
+#include <iostream>
+#include <stdlib.h>
 using namespace std;
 
 class Board {
@@ -10,6 +13,7 @@ class Board {
 private:
     bitset<64> black;
     bitset<64> taken;    
+    std::vector<int> simpleScores;
        
     bool occupied(int x, int y);
     bool get(Side side, int x, int y);
@@ -17,12 +21,15 @@ private:
     bool onBoard(int x, int y);
       
 public:
-    Board();
+    Board(Side side);
     ~Board();
     Board *copy();
         
+    Side mySelf;
+
     bool isDone();
-    bool hasMoves(Side side);
+    int hasMoves(Side side);
+    int bestMove(Side side);
     bool checkMove(Move *m, Side side);
     void doMove(Move *m, Side side);
     int count(Side side);
@@ -30,6 +37,8 @@ public:
     int countWhite();
 
     void setBoard(char data[]);
+    void setCornerScore(int indices, Side me);
+
 };
 
 #endif

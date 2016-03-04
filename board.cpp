@@ -3,7 +3,28 @@
 /*
  * Make a standard 8x8 othello board and initialize it to the standard setup.
  */
-Board::Board() {
+Board::Board(Side side) {
+	mySelf = side;
+	simpleScores = vector<int>(64, 1);
+	for (unsigned int i = 0; i < simpleScores.size(); i++) {
+		if (i % 8 == 0 || i % 8 == 7) simpleScores[i] *= 3;
+		if (i < 8 || i > 55) simpleScores[i] *= 3;
+		if ((i/8 == 2 || i/8 == 5) && !(i == 16 || i == 23 || i == 40 || i == 47)) simpleScores[i] = -2*abs(simpleScores[i]);
+		if ((i%8 == 2 || i%8 == 5) && !(i == 2 || i == 58 || i == 61 || i == 5)) simpleScores[i] = -2*abs(simpleScores[i]);
+		if (i/8 == 1 || i/8 == 6) simpleScores[i] = -5*abs(simpleScores[i]);
+		if (i % 8 == 1 || i % 8 == 6) simpleScores[i] = -5*abs(simpleScores[i]);
+	}
+	simpleScores[9] *= 3;
+	simpleScores[14] *= 3;
+	simpleScores[49] *= 3;
+	simpleScores[54] *= 3;
+	for (int i = 0; i < 8; i++) {
+		for (int j = 0; j < 8; j++) {
+			std::cerr << simpleScores[i*8 + j] << "  " << std::endl;
+		}
+		std::cerr << std::endl;
+	}
+	
     taken.set(3 + 8 * 3);
     taken.set(3 + 8 * 4);
     taken.set(4 + 8 * 3);
@@ -22,7 +43,7 @@ Board::~Board() {
  * Returns a copy of this board.
  */
 Board *Board::copy() {
-    Board *newBoard = new Board();
+    Board *newBoard = new Board(this->mySelf);
     newBoard->black = black;
     newBoard->taken = taken;
     return newBoard;
@@ -55,16 +76,37 @@ bool Board::isDone() {
 }
 
 /*
- * Returns true if there are legal moves for the given side.
+ * Returns indices if there are legal moves for the given side.
  */
-bool Board::hasMoves(Side side) {
+int Board::hasMoves(Side side) {
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
             Move move(i, j);
-            if (checkMove(&move, side)) return true;
+            if (checkMove(&move, side)) return i*10 + j;
         }
     }
-    return false;
+    return -1;
+}
+
+/*
+ * Returns the best move if there are legal moves for the given side.
+ */
+int Board::bestMove(Side side) {
+	int best = -200;
+	int indices = -1;
+	int maybe;
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            Move move(i, j);
+            maybe = i*8 + j;
+            if ((simpleScores[maybe] > best) && checkMove(&move, side)) {
+				best = simpleScores[maybe];
+				indices = maybe;
+			}
+        }
+    }
+   
+    return indices;
 }
 
 /*
@@ -110,9 +152,10 @@ void Board::doMove(Move *m, Side side) {
 
     // Ignore if move is invalid.
     if (!checkMove(m, side)) return;
-
+	
     int X = m->getX();
     int Y = m->getY();
+
     Side other = (side == BLACK) ? WHITE : BLACK;
     for (int dx = -1; dx <= 1; dx++) {
         for (int dy = -1; dy <= 1; dy++) {
@@ -138,7 +181,12 @@ void Board::doMove(Move *m, Side side) {
             }
         }
     }
+    
+    if ((X == 0 && (Y == 0 || Y == 7)) || (X == 7 && (Y == 0 || Y == 7)))
+		setCornerScore(X*8 + Y, side);
+
     set(side, X, Y);
+    
 }
 
 /*
@@ -178,3 +226,29 @@ void Board::setBoard(char data[]) {
         }
     }
 }
+
+void Board::setCornerScore(int indices, Side me) {
+	double mult = 0.2;
+	if (me == mySelf)
+		mult = -10;
+	if (indices == 0) {
+		simpleScores[1] *= mult;
+		simpleScores[8] *= mult; 
+		simpleScores[9] *= mult;
+	}
+	else if (indices == 7) {
+		simpleScores[6] *= mult;
+		simpleScores[14] *= mult;
+		simpleScores[15] *= mult;
+	}
+	else if (indices == 56) {
+		simpleScores[48] *= mult;
+		simpleScores[49] *= mult;
+		simpleScores[57] *= mult;
+	}
+	else if (indices == 63) {
+		simpleScores[54] *= mult;
+		simpleScores[55] *= mult;
+		simpleScores[62] *= mult;
+	}
+}		
