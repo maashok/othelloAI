@@ -8,22 +8,22 @@
 Player::Player(Side side) {
     // Will be set to true in test_minimax.cpp.
     testingMinimax = false;
+    // Creates a new board for this side
 	board = new Board(side);
-	
+	// Save what side we are and what side the opponent is on
 	me = side;
 	opp = (side == WHITE) ? BLACK : WHITE;
-	
-    /* 
-     * TODO: Do any initialization you need to do here (setting up the board,
-     * precalculating things, etc.) However, remember that you will only have
-     * 30 seconds.
-     */
 }
 
 /*
  * Destructor for the player.
  */
 Player::~Player() {
+	delete board;
+}
+
+void Player::setBoard(Board *newBoard) {
+	board = newBoard;
 }
 
 /*
@@ -39,25 +39,45 @@ Player::~Player() {
  * return NULL.
  */
 Move *Player::doMove(Move *opponentsMove, int msLeft) {
-    /* 
-     * TODO: Implement how moves your AI should play here. You should first
-     * process the opponent's opponents move before calculating your own move
-     */
-     
+	// First do the opponent's move
+	board->doMove(opponentsMove, opp);
+	
+	// Calculate some random valid move and return that move
      /* The random way
-     board->doMove(opponentsMove, opp);
      int randCoord = board->hasMoves(me);
      if (randCoord == -1) return NULL;
      Move *randMove = new Move(randCoord/10, randCoord%10);
      board->doMove(randMove, me);
      return randMove;  
      */ 
-     
-     board->doMove(opponentsMove, opp);
-     int bestCoord = board->bestMove(me);
-     if (bestCoord == -1) return NULL;
-     Move *best = new Move(bestCoord/8, bestCoord%8);
-     board->doMove(best, me);
-     return best; 
-     
+    
+    // If testing minimax, then do minimax with depth of 2 and basic
+    // heuristic
+	if (testingMinimax) {
+		board->getBasicBest(2, 1, true);
+		Move *goodMove = board->bestBasicMove;
+		return goodMove;
+	}
+	// Otherwise, ...
+	else {
+		std::cerr << "Sorry, not implemented yet!" << std::endl;
+		return NULL;
+		/*if (msLeft > 300000)
+			board->getBetterBest(10, 1);
+		else 
+			board->getBetterBest(4, 1);
+		Move *goodMove = board->betterBestMove;
+		return goodMove;*/
+	}
+	
+	
+	// The Basic Heuristic, that doesn't look ahead into the future
+	// but still chooses squares based on the position's score
+    // Basic 
+    int bestCoord = board->bestMove(me);
+	if (bestCoord == -1) return NULL;
+    Move *best = new Move(bestCoord/8, bestCoord%8);
+	board->doMove(best, me);
+    return best; 
+    
 }

@@ -4,8 +4,12 @@
  * Make a standard 8x8 othello board and initialize it to the standard setup.
  */
 Board::Board(Side side) {
+	// Stores what side this board is for
 	mySelf = side;
+	// Store a basic method of assigning scores to different squares
 	simpleScores = vector<int>(64, 1);
+	// Corners have the highest score, edges also have high score,
+	// Boxes next to edges and corners have lower scores.
 	for (unsigned int i = 0; i < simpleScores.size(); i++) {
 		if (i % 8 == 0 || i % 8 == 7) simpleScores[i] *= 3;
 		if (i < 8 || i > 55) simpleScores[i] *= 3;
@@ -18,13 +22,15 @@ Board::Board(Side side) {
 	simpleScores[14] *= 3;
 	simpleScores[49] *= 3;
 	simpleScores[54] *= 3;
-	for (int i = 0; i < 8; i++) {
+	
+	// Print out the scores given to boxes for error checking purposes
+	/*(for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8; j++) {
 			std::cerr << simpleScores[i*8 + j] << "  " << std::endl;
 		}
 		std::cerr << std::endl;
 	}
-	
+	*/
     taken.set(3 + 8 * 3);
     taken.set(3 + 8 * 4);
     taken.set(4 + 8 * 3);
@@ -76,7 +82,7 @@ bool Board::isDone() {
 }
 
 /*
- * Returns indices if there are legal moves for the given side.
+ * Returns random indices if there are legal moves for the given side.
  */
 int Board::hasMoves(Side side) {
     for (int i = 0; i < 8; i++) {
@@ -99,6 +105,7 @@ int Board::bestMove(Side side) {
         for (int j = 0; j < 8; j++) {
             Move move(i, j);
             maybe = i*8 + j;
+            // Picks the move with the highest simple score
             if ((simpleScores[maybe] > best) && checkMove(&move, side)) {
 				best = simpleScores[maybe];
 				indices = maybe;
@@ -142,6 +149,54 @@ bool Board::checkMove(Move *m, Side side) {
     }
     return false;
 }
+
+/*
+ * Does the minimax to find the best move to make and its score.
+ * Returns the score of the board after making the move, and changes
+ * the state of the best move for the board.
+ * Uses DFS
+ */
+
+int Board::getBasicBest(int depth, int player, bool testing) {
+	// Figures out which color the current move is for
+	Side side;
+	if ((player == 1 && mySelf == BLACK) || (player == -1 && mySelf == WHITE))
+		side = BLACK;
+	else side = WHITE;
+	// If there are no valid moves for this player or we have reached
+	// maximum depth, reutrn the score of the board right now
+	if(hasMoves(side) == -1 || depth <= 0) {
+		if (testing) return basicHeuristic() * player;
+	}
+	// Find the best move and score
+	int bestScore = -1000000;
+	Move *bestMove = new Move(0, 0);
+	for (int i = 0; i < 8; i++) {
+		for (int j = 0; j < 8;j++) {
+			Move *possMove = new Move(i, j);
+			// Check if a move is valid and if it is, create a board
+			// for it, and find the score of doing minimax on that
+			// board for the opposite player
+			if (checkMove(possMove, side)) {
+				Board *cpy = this->copy();
+				cpy->doMove(possMove, side);
+				int score = -cpy->getBasicBest(depth - 1, -player, testing);
+				if (score > bestScore) {
+					bestScore = score;
+					delete bestMove;
+					bestMove = possMove;
+				}
+				// Delete memory allocated for variables we don't need
+				// anymore
+				else delete possMove;
+				delete cpy;
+			}
+		}
+	}
+	bestBasicMove = bestMove;
+	return bestScore;
+} 
+
 
 /*
  * Modifies the board to reflect the specified move.
@@ -210,6 +265,11 @@ int Board::countWhite() {
     return taken.count() - black.count();
 }
 
+int Board::basicHeuristic() {
+	if (mySelf == BLACK) return countBlack() - countWhite();
+	return countWhite() - countBlack();
+}
+
 /*
  * Sets the board state given an 8x8 char array where 'w' indicates a white
  * piece and 'b' indicates a black piece. Mainly for testing purposes.
@@ -227,8 +287,21 @@ void Board::setBoard(char data[]) {
     }
 }
 
+/* Once we get a corner square, then the squares next to it become stable
+ * rather than undesirable. If the opponent gets it, then the squares
+ * become neutral since we don't want it to be stable for the opponent
+ * but there are other more important squares we could be looking at.
+ * Changes the squares accordingly.
+ */
+
 void Board::setCornerScore(int indices, Side me) {
-	double mult = 0.2;
+	
+	// If I got the corner, then the squares next to it, become -10 times
+	// the current score. (Since they are currently negative, will become
+	// large positive number)
+	// If opponent got it, they become 1/5 of the current score (still 
+	// negative but much smaller)
+	double mult = 0.1;
 	if (me == mySelf)
 		mult = -10;
 	if (indices == 0) {

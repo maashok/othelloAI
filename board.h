@@ -26,7 +26,9 @@ public:
     Board *copy();
         
     Side mySelf;
-
+    Move *bestBasicMove;
+	//Move *betterBestMove;
+	
     bool isDone();
     int hasMoves(Side side);
     int bestMove(Side side);
@@ -35,7 +37,9 @@ public:
     int count(Side side);
     int countBlack();
     int countWhite();
-
+	int basicHeuristic();
+	int getBasicBest(int depth, int player, bool testing);
+	//int getBetterBest(int depth, int player);
     void setBoard(char data[]);
     void setCornerScore(int indices, Side me);
 
