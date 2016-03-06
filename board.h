@@ -6,6 +6,7 @@
 #include <vector>
 #include <iostream>
 #include <stdlib.h>
+#include <stack>
 using namespace std;
 
 class Board {
@@ -21,6 +22,7 @@ private:
     bool onBoard(int x, int y);
       
 public:
+	static std::stack<Move> *moves;
     Board(Side side);
     ~Board();
     Board *copy();
@@ -34,15 +36,16 @@ public:
     int bestMove(Side side);
     bool checkMove(Move *m, Side side);
     void doMove(Move *m, Side side);
+    void undoMove();
     int count(Side side);
     int countBlack();
     int countWhite();
 	int basicHeuristic();
 	int betterHeuristic();
-	int getBest(int depth, int player, bool testing);
+	int getBest(int depth, int player, bool testing, bool topLevel);
     void setBoard(char data[]);
     void setCornerScore(int indices, Side me);
-
+	void printBoard();
 };
 
 #endif

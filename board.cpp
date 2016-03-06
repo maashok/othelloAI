@@ -93,7 +93,7 @@ int Board::hasMoves(Side side) {
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
             Move move(i, j);
-            if (checkMove(&move, side)) return i*10 + j;
+            if (checkMove(&move, side)) return i*8 + j;
         }
     }
     return -1;
@@ -117,7 +117,6 @@ int Board::bestMove(Side side) {
 			}
         }
     }
-   
     return indices;
 }
 
@@ -126,14 +125,12 @@ int Board::bestMove(Side side) {
  */
 bool Board::checkMove(Move *m, Side side) {
     // Passing is only legal if you have no moves.
-    if (m == NULL) return !hasMoves(side);
+    if (m == NULL) return hasMoves(side) == -1;
 
     int X = m->getX();
     int Y = m->getY();
-
     // Make sure the square hasn't already been taken.
     if (occupied(X, Y)) return false;
-
     Side other = (side == BLACK) ? WHITE : BLACK;
     for (int dx = -1; dx <= 1; dx++) {
         for (int dy = -1; dy <= 1; dy++) {
@@ -147,7 +144,6 @@ bool Board::checkMove(Move *m, Side side) {
                     x += dx;
                     y += dy;
                 } while (onBoard(x, y) && get(other, x, y));
-
                 if (onBoard(x, y) && get(side, x, y)) return true;
             }
         }
@@ -162,10 +158,7 @@ bool Board::checkMove(Move *m, Side side) {
  * Uses DFS
  */
 
-int Board::getBest(int depth, int player, bool testing) {
-	std::cerr << "Get best iteration" << std::endl;
-	moveToDo->setX(-1);
-	moveToDo->setY(-1);
+int Board::getBest(int depth, int player, bool testing, bool topLevel) {
 	// Figures out which color the current move is for
 	Side side;
 	if (player == 1)
@@ -173,42 +166,41 @@ int Board::getBest(int depth, int player, bool testing) {
 	else side = opp;
 	// If there are no valid moves for this player or we have reached
 	// maximum depth, reutrn the score of the board right now
-	if(hasMoves(side) == -1 || depth <= 0) {
+	if((hasMoves(side) == -1) || depth <= 0) {
 		if (testing) return basicHeuristic() * player;
 		else return betterHeuristic() * player;
 	}
-	std::cerr << "Get inside" << std::endl;
 	// Find the best move and score
-	int bestScore = -1000000;
-	std::cerr << "line 1" << std::endl;
+	bool changed = false;
+	int bestScore = -1000000000;
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8;j++) {
-			std::cerr << "line 2" << std::endl;
 			Move *possMove = new Move(i, j);
 			// Check if a move is valid and if it is, create a board
 			// for it, and find the score of doing minimax on that
 			// board for the opposite player
-			std::cerr << "line 3" << std::endl;
 			if (checkMove(possMove, side)) {
-				std::cerr << "line 4" << std::endl;
-				Board *cpy = this->copy();
-				std::cerr << "line 5" << std::endl;
-				cpy->doMove(possMove, side);
-				std::cerr << "line 6" << std::endl;
-				int score = -1*cpy->getBest(depth - 1, -player, testing);
+				//std::cerr << "Move " << i << j << "Being tried by " << player << std::endl;
+				doMove(possMove, side);
+				int score = -1*getBest(depth - 1, -player, testing, false);
 				if (score > bestScore) {
 					bestScore = score;
-					moveToDo->setX(possMove->getX());
-					moveToDo->setY(possMove->getY());
+					if (topLevel) {
+						moveToDo->setX(possMove->getX());
+						moveToDo->setY(possMove->getY());
+					}
+					changed = true;
 				}
 				// Delete memory allocated for variables we don't need
 				// anymore
 				if (possMove != NULL) delete possMove;
-				if (cpy != NULL) delete cpy;
+				undoMove();
 			}
 		}
 	}
-	std::cerr << "leaving get best" << std::endl;
+	if (!changed) {
+		moveToDo->setX(-1);
+	}
 	return bestScore;
 } 
 
@@ -224,6 +216,8 @@ void Board::doMove(Move *m, Side side) {
 	
     int X = m->getX();
     int Y = m->getY();
+    Board::moves->push(Move(-1, -1, EMPTY));
+    Board::moves->push(Move(X, Y, EMPTY));
     Side other = (side == BLACK) ? WHITE : BLACK;
     for (int dx = -1; dx <= 1; dx++) {
         for (int dy = -1; dy <= 1; dy++) {
@@ -242,7 +236,13 @@ void Board::doMove(Move *m, Side side) {
                 x += dx;
                 y += dy;
                 while (onBoard(x, y) && get(other, x, y)) {
+					if (taken[x+8*y]) {
+						if (black[x+8*y]) Board::moves->push(Move(x, y, BLACK));
+						else Board::moves->push(Move(x, y, WHITE));
+					}
+					else Board::moves->push(Move(x, y, EMPTY));
                     set(side, x, y);
+                    //std::cerr << "Acc move" << x << y << std::endl;
                     x += dx;
                     y += dy;
                 }
@@ -250,9 +250,40 @@ void Board::doMove(Move *m, Side side) {
         }
     }
     if ((X == 0 && (Y == 0 || Y == 7)) || (X == 7 && (Y == 0 || Y == 7)))
-		setCornerScore(X*8 + Y, side);
+		setCornerScore(X + Y*8, side);
     set(side, X, Y);
-    
+    //std::cerr << "Move" << X << Y << std::endl;
+
+	Board::moves->push(Move(-1, -1, EMPTY));
+}
+
+/*
+ * Undo a whole move, including stones that are turned over as part of
+ * the move
+ */
+void Board::undoMove() {
+	while (!Board::moves->empty() && moves->top().getX() == -1) {
+		Board::moves->pop();
+	}
+	while (!Board::moves->empty()) {
+		Move move = Board::moves->top();
+		if (move.getX() == -1) {
+			return;
+		}
+		if (move.getX() == -2) return;
+		//std::cerr << "Undo move" << move.x << move.y << std::endl;
+		if (move.oldSide == EMPTY) {
+			taken[move.x + move.y*8] = 0;
+			black[move.x + move.y*8] = 0;
+		}
+		else {
+			taken[move.x + move.y*8] = 1;
+			if (move.oldSide == BLACK)
+				black[move.x + move.y*8] = 1;
+			else black[move.x + move.y*8] = 0;
+		}
+		Board::moves->pop();
+	}
 }
 
 /*
@@ -367,3 +398,11 @@ void Board::setCornerScore(int indices, Side me) {
 		simpleScores[62] *= mult;
 	}
 }		
+
+void Board::printBoard() {
+	std::cerr << "Taken" << std::endl;
+	for (int i  = 0; i < 64; i++) {
+		std::cerr << taken[i];
+	}
+	std::cerr << std::endl;
+}

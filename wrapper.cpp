@@ -4,6 +4,8 @@
 #include "player.h"
 using namespace std;
 
+std::stack<Move> *Board::moves = new std::stack<Move>();
+
 int main(int argc, char *argv[]) {    
     // Read in side the player is on.
     if (argc != 2)  {

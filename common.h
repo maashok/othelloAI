@@ -2,17 +2,23 @@
 #define __COMMON_H__
 
 enum Side { 
-    WHITE, BLACK
+    WHITE, BLACK, EMPTY
 };
 
 class Move {
    
 public:
     int x, y;
+    Side oldSide;
     Move(int x, int y) {
         this->x = x;
         this->y = y;        
     }
+    Move(int x, int y, Side side) {
+		this->x = x;
+		this->y = y;
+		this->oldSide = side;
+	}
     ~Move() {}
 
     int getX() { return x; }

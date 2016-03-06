@@ -42,33 +42,49 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 	// First do the opponent's move
 	if (opponentsMove != NULL) {
 		board->doMove(opponentsMove, opp);
+		Board::moves->push(Move(-2, -2, EMPTY));
+		std::cerr << "Opp" << opponentsMove->x << opponentsMove->y << std::endl;
 	}
+	
 	// Calculate some random valid move and return that move
      /* The random way
      int randCoord = board->hasMoves(me);
      if (randCoord == -1) return NULL;
-     Move *randMove = new Move(randCoord/10, randCoord%10);
+     Move *randMove = new Move(randCoord/8, randCoord%8);
      board->doMove(randMove, me);
      return randMove;  
      */ 
 	
     // If testing minimax, then do minimax with depth of 2 and basic
     // heuristic
+    //std::cerr << "1" << std::endl;
+    //board->printBoard();
 	if (testingMinimax) {
-		board->getBest(6, 1, true);
+		board->getBest(4, 1, true, true);
+		//std::cerr << 5"2" << std::endl;
+		//board->printBoard();
 		Move *goodMove = new Move(board->moveToDo->getX(), board->moveToDo->getY());
-		std::cerr << "we got a move" << std::endl;
+		board->moveToDo->setX(-1);
+		board->moveToDo->setY(-1);
 		if (goodMove->getX() == -1) return NULL;
+		while (!Board::moves->empty() && Board::moves->top().x != -2) {
+			board->undoMove();
+		}
+		//std::cerr << "2" << std::endl;
+		//board->printBoard();
 		board->doMove(goodMove, me);
-
+		Board::moves->push(Move(-2, -2, EMPTY));
+		//std::cerr << "3" << std::endl;
+		//board->printBoard();
+		std::cerr << "my" << goodMove->x << goodMove->y << std::endl;
 		return goodMove;
 	}
 	// Otherwise, ...
 	else {
 		if (msLeft > 300000)
-			board->getBest(5, 1, false);
+			board->getBest(5, 1, false, true);
 		else 
-			board->getBest(3, 1, false);
+			board->getBest(3, 1, false, true);
 		Move *goodMove = new Move(board->moveToDo->getX(), board->moveToDo->getY());
 		if (goodMove->getX() == -1) return NULL;
 		board->doMove(goodMove, me);
