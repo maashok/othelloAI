@@ -7,7 +7,7 @@
  */
 Player::Player(Side side) {
     // Will be set to true in test_minimax.cpp.
-    testingMinimax = false;
+    testingMinimax = true;
     // Creates a new board for this side
 	board = new Board(side);
 	// Save what side we are and what side the opponent is on
@@ -40,8 +40,9 @@ void Player::setBoard(Board *newBoard) {
  */
 Move *Player::doMove(Move *opponentsMove, int msLeft) {
 	// First do the opponent's move
-	board->doMove(opponentsMove, opp);
-	
+	if (opponentsMove != NULL) {
+		board->doMove(opponentsMove, opp);
+	}
 	// Calculate some random valid move and return that move
      /* The random way
      int randCoord = board->hasMoves(me);
@@ -50,24 +51,28 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
      board->doMove(randMove, me);
      return randMove;  
      */ 
-    
+	
     // If testing minimax, then do minimax with depth of 2 and basic
     // heuristic
 	if (testingMinimax) {
-		board->getBasicBest(2, 1, true);
-		Move *goodMove = board->bestBasicMove;
+		board->getBest(6, 1, true);
+		Move *goodMove = new Move(board->moveToDo->getX(), board->moveToDo->getY());
+		std::cerr << "we got a move" << std::endl;
+		if (goodMove->getX() == -1) return NULL;
+		board->doMove(goodMove, me);
+
 		return goodMove;
 	}
 	// Otherwise, ...
 	else {
-		std::cerr << "Sorry, not implemented yet!" << std::endl;
-		return NULL;
-		/*if (msLeft > 300000)
-			board->getBetterBest(10, 1);
+		if (msLeft > 300000)
+			board->getBest(5, 1, false);
 		else 
-			board->getBetterBest(4, 1);
-		Move *goodMove = board->betterBestMove;
-		return goodMove;*/
+			board->getBest(3, 1, false);
+		Move *goodMove = new Move(board->moveToDo->getX(), board->moveToDo->getY());
+		if (goodMove->getX() == -1) return NULL;
+		board->doMove(goodMove, me);
+		return goodMove;
 	}
 	
 	

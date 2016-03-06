@@ -27,7 +27,6 @@ int main(int argc, char *argv[]) {
         if (moveX >= 0 && moveY >= 0) {
             opponentsMove = new Move(moveX, moveY);
         }
-        
         // Get player's move and output to java wrapper.
         Move *playersMove = player->doMove(opponentsMove, msLeft);                        
         if (playersMove != NULL) {                  

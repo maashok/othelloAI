@@ -6,6 +6,8 @@
 Board::Board(Side side) {
 	// Stores what side this board is for
 	mySelf = side;
+	if (mySelf == BLACK) opp = WHITE;
+	else opp = BLACK;
 	// Store a basic method of assigning scores to different squares
 	simpleScores = vector<int>(64, 1);
 	// Corners have the highest score, edges also have high score,
@@ -18,6 +20,9 @@ Board::Board(Side side) {
 		if (i/8 == 1 || i/8 == 6) simpleScores[i] = -5*abs(simpleScores[i]);
 		if (i % 8 == 1 || i % 8 == 6) simpleScores[i] = -5*abs(simpleScores[i]);
 	}
+	
+	moveToDo = new Move(-1, -1);
+	
 	simpleScores[9] *= 3;
 	simpleScores[14] *= 3;
 	simpleScores[49] *= 3;
@@ -157,60 +162,68 @@ bool Board::checkMove(Move *m, Side side) {
  * Uses DFS
  */
 
-int Board::getBasicBest(int depth, int player, bool testing) {
+int Board::getBest(int depth, int player, bool testing) {
+	std::cerr << "Get best iteration" << std::endl;
+	moveToDo->setX(-1);
+	moveToDo->setY(-1);
 	// Figures out which color the current move is for
 	Side side;
-	if ((player == 1 && mySelf == BLACK) || (player == -1 && mySelf == WHITE))
-		side = BLACK;
-	else side = WHITE;
+	if (player == 1)
+		side = mySelf;
+	else side = opp;
 	// If there are no valid moves for this player or we have reached
 	// maximum depth, reutrn the score of the board right now
 	if(hasMoves(side) == -1 || depth <= 0) {
 		if (testing) return basicHeuristic() * player;
+		else return betterHeuristic() * player;
 	}
+	std::cerr << "Get inside" << std::endl;
 	// Find the best move and score
 	int bestScore = -1000000;
-	Move *bestMove = new Move(0, 0);
+	std::cerr << "line 1" << std::endl;
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8;j++) {
+			std::cerr << "line 2" << std::endl;
 			Move *possMove = new Move(i, j);
 			// Check if a move is valid and if it is, create a board
 			// for it, and find the score of doing minimax on that
 			// board for the opposite player
+			std::cerr << "line 3" << std::endl;
 			if (checkMove(possMove, side)) {
+				std::cerr << "line 4" << std::endl;
 				Board *cpy = this->copy();
+				std::cerr << "line 5" << std::endl;
 				cpy->doMove(possMove, side);
-				int score = -cpy->getBasicBest(depth - 1, -player, testing);
+				std::cerr << "line 6" << std::endl;
+				int score = -1*cpy->getBest(depth - 1, -player, testing);
 				if (score > bestScore) {
 					bestScore = score;
-					delete bestMove;
-					bestMove = possMove;
+					moveToDo->setX(possMove->getX());
+					moveToDo->setY(possMove->getY());
 				}
 				// Delete memory allocated for variables we don't need
 				// anymore
-				else delete possMove;
-				delete cpy;
+				if (possMove != NULL) delete possMove;
+				if (cpy != NULL) delete cpy;
 			}
 		}
 	}
-	bestBasicMove = bestMove;
+	std::cerr << "leaving get best" << std::endl;
 	return bestScore;
 } 
-
 
 /*
  * Modifies the board to reflect the specified move.
  */
 void Board::doMove(Move *m, Side side) {
+
     // A NULL move means pass.
     if (m == NULL) return;
-
     // Ignore if move is invalid.
     if (!checkMove(m, side)) return;
 	
     int X = m->getX();
     int Y = m->getY();
-
     Side other = (side == BLACK) ? WHITE : BLACK;
     for (int dx = -1; dx <= 1; dx++) {
         for (int dy = -1; dy <= 1; dy++) {
@@ -236,10 +249,8 @@ void Board::doMove(Move *m, Side side) {
             }
         }
     }
-    
     if ((X == 0 && (Y == 0 || Y == 7)) || (X == 7 && (Y == 0 || Y == 7)))
 		setCornerScore(X*8 + Y, side);
-
     set(side, X, Y);
     
 }
@@ -268,6 +279,37 @@ int Board::countWhite() {
 int Board::basicHeuristic() {
 	if (mySelf == BLACK) return countBlack() - countWhite();
 	return countWhite() - countBlack();
+}
+
+int Board::betterHeuristic() {
+	int numMyCorners = 0, numMyEdges = 0;
+	int numTheirCorners = 0, numTheirEdges = 0;
+	for (int i = 1; i < 7; i++) {
+		if (get(mySelf, i, 0)) numMyEdges ++;
+		else if (get(opp, i, 0)) numTheirEdges ++;
+		if (get(mySelf, i, 7)) numMyEdges ++;
+		else if (get(opp, i, 7)) numTheirEdges ++;
+		if (get(mySelf, 0, i)) numMyEdges ++;
+		else if (get(opp, 0, i)) numTheirEdges ++;
+		if (get(mySelf, 7, i)) numMyEdges ++;
+		else if (get(opp, 7, i)) numTheirEdges ++;
+	}
+	if (get(mySelf, 0, 0)) numMyCorners ++;
+	else if (get(opp, 0, 0)) numTheirCorners ++;
+	if (get(mySelf, 0, 7)) numMyCorners ++;
+	else if (get(opp, 0, 7)) numTheirCorners ++;
+	if (get(mySelf, 7, 0)) numMyCorners ++;
+	else if (get(opp, 7, 0)) numTheirCorners ++;
+	if (get(mySelf, 7, 7)) numMyCorners ++;
+	else if (get(opp, 7, 7)) numTheirCorners ++;
+	
+	numMyCorners *= 150;
+	numMyEdges *= -50;
+	numTheirCorners *= -150;
+	numTheirEdges *= -50;
+	int total = numMyCorners + numMyEdges + numTheirCorners + numTheirEdges;
+	return total * basicHeuristic();
+
 }
 
 /*
