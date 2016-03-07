@@ -4,7 +4,7 @@
 #include "player.h"
 using namespace std;
 
-std::stack<Move> *Board::moves = new std::stack<Move>();
+std::stack<int> *Board::moves = new std::stack<int>();
 
 int main(int argc, char *argv[]) {    
     // Read in side the player is on.

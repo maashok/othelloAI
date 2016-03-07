@@ -22,7 +22,7 @@ private:
     bool onBoard(int x, int y);
       
 public:
-	static std::stack<Move> *moves;
+	static std::stack<int> *moves;
     Board(Side side);
     ~Board();
     Board *copy();

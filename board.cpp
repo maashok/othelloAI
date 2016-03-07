@@ -180,7 +180,6 @@ int Board::getBest(int depth, int player, bool testing, bool topLevel) {
 			// for it, and find the score of doing minimax on that
 			// board for the opposite player
 			if (checkMove(possMove, side)) {
-				//std::cerr << "Move " << i << j << "Being tried by " << player << std::endl;
 				doMove(possMove, side);
 				int score = -1*getBest(depth - 1, -player, testing, false);
 				if (score > bestScore) {
@@ -216,8 +215,8 @@ void Board::doMove(Move *m, Side side) {
 	
     int X = m->getX();
     int Y = m->getY();
-    Board::moves->push(Move(-1, -1, EMPTY));
-    Board::moves->push(Move(X, Y, EMPTY));
+    Board::moves->push(-1);
+    Board::moves->push(X + Y*8);
     Side other = (side == BLACK) ? WHITE : BLACK;
     for (int dx = -1; dx <= 1; dx++) {
         for (int dy = -1; dy <= 1; dy++) {
@@ -237,14 +236,14 @@ void Board::doMove(Move *m, Side side) {
                 y += dy;
                 while (onBoard(x, y) && get(other, x, y)) {
 					if (taken[x+8*y]) {
-						if (black[x+8*y]) Board::moves->push(Move(x, y, BLACK));
-						else Board::moves->push(Move(x, y, WHITE));
+						if (black[x+8*y]) Board::moves->push(x + y*8 + 100);
+						else Board::moves->push(x + y*8 + 200);
 					}
-					else Board::moves->push(Move(x, y, EMPTY));
+					else Board::moves->push(x+y*8);
                     set(side, x, y);
-                    //std::cerr << "Acc move" << x << y << std::endl;
                     x += dx;
                     y += dy;
+
                 }
             }
         }
@@ -252,9 +251,8 @@ void Board::doMove(Move *m, Side side) {
     if ((X == 0 && (Y == 0 || Y == 7)) || (X == 7 && (Y == 0 || Y == 7)))
 		setCornerScore(X + Y*8, side);
     set(side, X, Y);
-    //std::cerr << "Move" << X << Y << std::endl;
 
-	Board::moves->push(Move(-1, -1, EMPTY));
+	Board::moves->push(-1);
 }
 
 /*
@@ -262,25 +260,24 @@ void Board::doMove(Move *m, Side side) {
  * the move
  */
 void Board::undoMove() {
-	while (!Board::moves->empty() && moves->top().getX() == -1) {
+	while (!Board::moves->empty() && moves->top() == -1) {
 		Board::moves->pop();
 	}
 	while (!Board::moves->empty()) {
-		Move move = Board::moves->top();
-		if (move.getX() == -1) {
+		int top = Board::moves->top();
+		if (top == -1) {
 			return;
 		}
-		if (move.getX() == -2) return;
-		//std::cerr << "Undo move" << move.x << move.y << std::endl;
-		if (move.oldSide == EMPTY) {
-			taken[move.x + move.y*8] = 0;
-			black[move.x + move.y*8] = 0;
+		if (top == -5) return;
+		if (top < 100) {
+			taken[top] = 0;
+			black[top] = 0;
 		}
 		else {
-			taken[move.x + move.y*8] = 1;
-			if (move.oldSide == BLACK)
-				black[move.x + move.y*8] = 1;
-			else black[move.x + move.y*8] = 0;
+			taken[top%100] = 1;
+			if (top < 200)
+				black[top%100] = 1;
+			else black[top%100] = 0;
 		}
 		Board::moves->pop();
 	}

@@ -42,8 +42,7 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 	// First do the opponent's move
 	if (opponentsMove != NULL) {
 		board->doMove(opponentsMove, opp);
-		Board::moves->push(Move(-2, -2, EMPTY));
-		std::cerr << "Opp" << opponentsMove->x << opponentsMove->y << std::endl;
+		Board::moves->push(-5);
 	}
 	
 	// Calculate some random valid move and return that move
@@ -57,26 +56,20 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 	
     // If testing minimax, then do minimax with depth of 2 and basic
     // heuristic
-    //std::cerr << "1" << std::endl;
-    //board->printBoard();
 	if (testingMinimax) {
-		board->getBest(4, 1, true, true);
-		//std::cerr << 5"2" << std::endl;
-		//board->printBoard();
+		board->getBest(5, 1, true, true);
+
 		Move *goodMove = new Move(board->moveToDo->getX(), board->moveToDo->getY());
 		board->moveToDo->setX(-1);
 		board->moveToDo->setY(-1);
 		if (goodMove->getX() == -1) return NULL;
-		while (!Board::moves->empty() && Board::moves->top().x != -2) {
+		while (!Board::moves->empty() && Board::moves->top() != -5) {
 			board->undoMove();
 		}
-		//std::cerr << "2" << std::endl;
-		//board->printBoard();
+
 		board->doMove(goodMove, me);
-		Board::moves->push(Move(-2, -2, EMPTY));
-		//std::cerr << "3" << std::endl;
-		//board->printBoard();
-		std::cerr << "my" << goodMove->x << goodMove->y << std::endl;
+		Board::moves->push(-5);
+
 		return goodMove;
 	}
 	// Otherwise, ...
