@@ -7,7 +7,7 @@
  */
 Player::Player(Side side) {
     // Will be set to true in test_minimax.cpp.
-    testingMinimax = true;
+    testingMinimax = false;
     // Creates a new board for this side
 	board = new Board(side);
 	// Save what side we are and what side the opponent is on
@@ -39,9 +39,9 @@ void Player::setBoard(Board *newBoard) {
  * return NULL.
  */
 Move *Player::doMove(Move *opponentsMove, int msLeft) {
+	board->doMove(opponentsMove, opp);
 	// First do the opponent's move
 	if (opponentsMove != NULL) {
-		board->doMove(opponentsMove, opp);
 		Board::moves->push(-5);
 	}
 	
@@ -56,24 +56,32 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 	
     // If testing minimax, then do minimax with depth of 2 and basic
     // heuristic
+    // TO successfully win against SimplePlayer using the naive heuristic
+    // and minimax, merely change testingMinimax to true in the constructor
+    // and call board->getBest(5, 1, true, true).
 	if (testingMinimax) {
-		board->getBest(5, 1, true, true);
+		board->getBest(2, 1, true, true);
 
 		Move *goodMove = new Move(board->moveToDo->getX(), board->moveToDo->getY());
+		// After we got a move, we will reset the next move to be -1 for now
 		board->moveToDo->setX(-1);
 		board->moveToDo->setY(-1);
 		if (goodMove->getX() == -1) return NULL;
+		// We will also undo all moves done after the permanent ones before
+		// pushing the new move on
 		while (!Board::moves->empty() && Board::moves->top() != -5) {
 			board->undoMove();
 		}
 
 		board->doMove(goodMove, me);
+		// Push a marker move -5 to signify a permanent move has been done
 		Board::moves->push(-5);
 
 		return goodMove;
 	}
-	// Otherwise, ...
-	else {
+	// Otherwise, this will be implemented better later to include more
+	// advanced heuristic...
+	/*else {
 		if (msLeft > 300000)
 			board->getBest(5, 1, false, true);
 		else 
@@ -82,12 +90,34 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 		if (goodMove->getX() == -1) return NULL;
 		board->doMove(goodMove, me);
 		return goodMove;
-	}
+	}*/
+	
+	// If not testing minimax, can do search with depth of 5 using naive
+	// heuristic for minimax
+	/*else {
+		board->getBest(5, 1, true, true);
+
+		Move *goodMove = new Move(board->moveToDo->getX(), board->moveToDo->getY());
+		// After we got a move, we will reset the next move to be -1 for now
+		board->moveToDo->setX(-1);
+		board->moveToDo->setY(-1);
+		if (goodMove->getX() == -1) return NULL;
+		// We will also undo all moves done after the permanent ones before
+		// pushing the new move on
+		while (!Board::moves->empty() && Board::moves->top() != -5) {
+			board->undoMove();
+		}
+
+		board->doMove(goodMove, me);
+		// Push a marker move -5 to signify a permanent move has been done
+		Board::moves->push(-5);
+
+		return goodMove;
+	}*/
 	
 	
 	// The Basic Heuristic, that doesn't look ahead into the future
 	// but still chooses squares based on the position's score
-    // Basic 
     int bestCoord = board->bestMove(me);
 	if (bestCoord == -1) return NULL;
     Move *best = new Move(bestCoord/8, bestCoord%8);

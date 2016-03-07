@@ -3,6 +3,8 @@
 #include "player.h"
 #include "board.h"
 
+std::stack<int> *Board::moves = new std::stack<int>();
+
 // Use this file to test your minimax implementation (2-ply depth, with a
 // heuristic of the difference in number of pieces).
 int main(int argc, char *argv[]) {

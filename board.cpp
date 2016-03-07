@@ -36,6 +36,7 @@ Board::Board(Side side) {
 		std::cerr << std::endl;
 	}
 	*/
+	
     taken.set(3 + 8 * 3);
     taken.set(3 + 8 * 4);
     taken.set(4 + 8 * 3);
@@ -83,7 +84,7 @@ bool Board::onBoard(int x, int y) {
  * if neither side has a legal move.
  */
 bool Board::isDone() {
-    return !(hasMoves(BLACK) || hasMoves(WHITE));
+    return (hasMoves(BLACK) == -1) || (hasMoves(WHITE) == -1);
 }
 
 /*
@@ -176,12 +177,15 @@ int Board::getBest(int depth, int player, bool testing, bool topLevel) {
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8;j++) {
 			Move *possMove = new Move(i, j);
-			// Check if a move is valid and if it is, create a board
-			// for it, and find the score of doing minimax on that
+			// Check if a move is valid and if it is, do the move, and 
+			// find the score of doing minimax on that
 			// board for the opposite player
 			if (checkMove(possMove, side)) {
 				doMove(possMove, side);
 				int score = -1*getBest(depth - 1, -player, testing, false);
+				// If this move yields a higher score than so far, do
+				// it and if we are in the top level of recursion, change
+				// the move we must to do to this move
 				if (score > bestScore) {
 					bestScore = score;
 					if (topLevel) {
@@ -191,12 +195,14 @@ int Board::getBest(int depth, int player, bool testing, bool topLevel) {
 					changed = true;
 				}
 				// Delete memory allocated for variables we don't need
-				// anymore
+				// anymore and undo the move we have done
 				if (possMove != NULL) delete possMove;
 				undoMove();
 			}
 		}
 	}
+	// If we couldn't find any best move, just set the move we need to
+	// do to -1, which is a flag to the player that there are no moves left
 	if (!changed) {
 		moveToDo->setX(-1);
 	}
@@ -215,6 +221,8 @@ void Board::doMove(Move *m, Side side) {
 	
     int X = m->getX();
     int Y = m->getY();
+    // Add the move -1 as a marker between moves and then push the current
+    // move that we want to do
     Board::moves->push(-1);
     Board::moves->push(X + Y*8);
     Side other = (side == BLACK) ? WHITE : BLACK;
@@ -235,6 +243,8 @@ void Board::doMove(Move *m, Side side) {
                 x += dx;
                 y += dy;
                 while (onBoard(x, y) && get(other, x, y)) {
+					// Add the stones we are turning as part of the move
+					// to our stack of moves done
 					if (taken[x+8*y]) {
 						if (black[x+8*y]) Board::moves->push(x + y*8 + 100);
 						else Board::moves->push(x + y*8 + 200);
@@ -248,10 +258,11 @@ void Board::doMove(Move *m, Side side) {
             }
         }
     }
+    // If we got a corner square, the ones next to it become more stable
     if ((X == 0 && (Y == 0 || Y == 7)) || (X == 7 && (Y == 0 || Y == 7)))
-		setCornerScore(X + Y*8, side);
+		setCornerScore(X*8 + Y, side);
     set(side, X, Y);
-
+	// As a marker between moves, push a move -1
 	Board::moves->push(-1);
 }
 
@@ -260,15 +271,24 @@ void Board::doMove(Move *m, Side side) {
  * the move
  */
 void Board::undoMove() {
+	// If there are -1 markers at the top of our stack, pop them off
 	while (!Board::moves->empty() && moves->top() == -1) {
 		Board::moves->pop();
 	}
+	// Make sure we don't go past capacity of stack
 	while (!Board::moves->empty()) {
 		int top = Board::moves->top();
+		// If our top value is -1, that means we have reached a marker
+		// between moves we are trying out, and we are done undoing this move
 		if (top == -1) {
 			return;
 		}
+		// If our top value is -5, we have reached the point where the moves
+		// before are actual moves already done
 		if (top == -5) return;
+		// The moves are encoded as move = x + y*8 + side, where side is
+		// 0 if the square was empty before, 1 if it was black before, 
+		// and 2 if it was white before
 		if (top < 100) {
 			taken[top] = 0;
 			black[top] = 0;
@@ -304,11 +324,18 @@ int Board::countWhite() {
     return taken.count() - black.count();
 }
 
+/* 
+ * Calculates the score using a basic heuristic, number of our stones
+ * minus the number of the opponent's stones.
+ */
 int Board::basicHeuristic() {
 	if (mySelf == BLACK) return countBlack() - countWhite();
 	return countWhite() - countBlack();
 }
 
+/*
+ * Calculates the score using a better heuristic - Is not working correctly
+ */
 int Board::betterHeuristic() {
 	int numMyCorners = 0, numMyEdges = 0;
 	int numTheirCorners = 0, numTheirEdges = 0;
@@ -396,6 +423,10 @@ void Board::setCornerScore(int indices, Side me) {
 	}
 }		
 
+/*
+ * Print out which of the board squares are taken for error-checking
+ * purposes.
+ */
 void Board::printBoard() {
 	std::cerr << "Taken" << std::endl;
 	for (int i  = 0; i < 64; i++) {
