@@ -81,16 +81,25 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 	}
 	// Otherwise, this will be implemented better later to include more
 	// advanced heuristic...
-	/*else {
-		if (msLeft > 300000)
-			board->getBest(5, 1, false, true);
-		else 
-			board->getBest(3, 1, false, true);
+	else {
+		board->getBest(5, 1, false, true);
 		Move *goodMove = new Move(board->moveToDo->getX(), board->moveToDo->getY());
+		// After we got a move, we will reset the next move to be -1 for now
+		board->moveToDo->setX(-1);
+		board->moveToDo->setY(-1);
 		if (goodMove->getX() == -1) return NULL;
+		// We will also undo all moves done after the permanent ones before
+		// pushing the new move on
+		while (!Board::moves->empty() && Board::moves->top() != -5) {
+			board->undoMove();
+		}
+
 		board->doMove(goodMove, me);
+		// Push a marker move -5 to signify a permanent move has been done
+		Board::moves->push(-5);
+
 		return goodMove;
-	}*/
+	}
 	
 	// If not testing minimax, can do search with depth of 5 using naive
 	// heuristic for minimax

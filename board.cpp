@@ -337,34 +337,59 @@ int Board::basicHeuristic() {
  * Calculates the score using a better heuristic - Is not working correctly
  */
 int Board::betterHeuristic() {
-	int numMyCorners = 0, numMyEdges = 0;
-	int numTheirCorners = 0, numTheirEdges = 0;
-	for (int i = 1; i < 7; i++) {
-		if (get(mySelf, i, 0)) numMyEdges ++;
-		else if (get(opp, i, 0)) numTheirEdges ++;
-		if (get(mySelf, i, 7)) numMyEdges ++;
-		else if (get(opp, i, 7)) numTheirEdges ++;
-		if (get(mySelf, 0, i)) numMyEdges ++;
-		else if (get(opp, 0, i)) numTheirEdges ++;
-		if (get(mySelf, 7, i)) numMyEdges ++;
-		else if (get(opp, 7, i)) numTheirEdges ++;
+	int stoneDiff = basicHeuristic();
+	int yourStable = 0;
+	int theirStable = 0;
+	if (get(mySelf, 0, 0)) {
+		yourStable ++;
+		if (get(mySelf, 1, 0)) yourStable++;
+		if (get(mySelf, 1, 1)) yourStable++;
+		if (get(mySelf, 0, 1)) yourStable++;
 	}
-	if (get(mySelf, 0, 0)) numMyCorners ++;
-	else if (get(opp, 0, 0)) numTheirCorners ++;
-	if (get(mySelf, 0, 7)) numMyCorners ++;
-	else if (get(opp, 0, 7)) numTheirCorners ++;
-	if (get(mySelf, 7, 0)) numMyCorners ++;
-	else if (get(opp, 7, 0)) numTheirCorners ++;
-	if (get(mySelf, 7, 7)) numMyCorners ++;
-	else if (get(opp, 7, 7)) numTheirCorners ++;
+	else if (get(opp, 0, 0)) {
+		theirStable ++;
+		if (get(mySelf, 1, 0)) theirStable++;
+		if (get(mySelf, 1, 1)) theirStable++;
+		if (get(mySelf, 0, 1)) theirStable++;
+	}
+	if (get(mySelf, 7, 0)) {
+		yourStable ++;
+		if (get(mySelf, 6, 0)) yourStable++;
+		if (get(mySelf, 6, 1)) yourStable++;
+		if (get(mySelf, 7, 1)) yourStable++;
+	}
+	else if (get(opp, 7, 0)) {
+		theirStable ++;
+		if (get(mySelf, 6, 0)) theirStable++;
+		if (get(mySelf, 6, 1)) theirStable++;
+		if (get(mySelf, 7, 1)) theirStable++;
+	}
+	if (get(mySelf, 0, 7)) {
+		yourStable ++;
+		if (get(mySelf, 1, 7)) yourStable++;
+		if (get(mySelf, 1, 6)) yourStable++;
+		if (get(mySelf, 0, 6)) yourStable++;
+	}
+	else if (get(opp, 0, 7)) {
+		theirStable ++;
+		if (get(mySelf, 1, 7)) theirStable++;
+		if (get(mySelf, 1, 6)) theirStable++;
+		if (get(mySelf, 0, 6)) theirStable++;
+	}
+	if (get(mySelf, 7, 7)) {
+		yourStable ++;
+		if (get(mySelf, 6, 7)) yourStable++;
+		if (get(mySelf, 6, 6)) yourStable++;
+		if (get(mySelf, 7, 6)) yourStable++;
+	}
+	else if (get(opp, 7, 7)) {
+		theirStable ++;
+		if (get(mySelf, 6, 7)) theirStable++;
+		if (get(mySelf, 6, 6)) theirStable++;
+		if (get(mySelf, 7, 6)) theirStable++;
+	}
 	
-	numMyCorners *= 150;
-	numMyEdges *= -50;
-	numTheirCorners *= -150;
-	numTheirEdges *= -50;
-	int total = numMyCorners + numMyEdges + numTheirCorners + numTheirEdges;
-	return total * basicHeuristic();
-
+	return (stoneDiff + (yourStable - theirStable) * 30);
 }
 
 /*
