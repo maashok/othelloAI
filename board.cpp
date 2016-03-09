@@ -352,6 +352,7 @@ int Board::betterHeuristic() {
 		if (get(opp, 1, 1)) theirStable++;
 		if (get(opp, 0, 1)) theirStable++;
 	}
+
 	if (get(mySelf, 7, 0)) {
 		yourStable ++;
 		if (get(mySelf, 6, 0)) yourStable++;
@@ -364,6 +365,7 @@ int Board::betterHeuristic() {
 		if (get(opp, 6, 1)) theirStable++;
 		if (get(opp, 7, 1)) theirStable++;
 	}
+
 	if (get(mySelf, 0, 7)) {
 		yourStable ++;
 		if (get(mySelf, 1, 7)) yourStable++;
@@ -376,6 +378,7 @@ int Board::betterHeuristic() {
 		if (get(opp, 1, 6)) theirStable++;
 		if (get(opp, 0, 6)) theirStable++;
 	}
+
 	if (get(mySelf, 7, 7)) {
 		yourStable ++;
 		if (get(mySelf, 6, 7)) yourStable++;
@@ -388,7 +391,7 @@ int Board::betterHeuristic() {
 		if (get(opp, 6, 6)) theirStable++;
 		if (get(opp, 7, 6)) theirStable++;
 	}
-	
+
 	int myEdges = 0, theirEdges = 0;
 	
 	for (int i = 2; i < 5; i++) {
