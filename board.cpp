@@ -348,9 +348,9 @@ int Board::betterHeuristic() {
 	}
 	else if (get(opp, 0, 0)) {
 		theirStable ++;
-		if (get(mySelf, 1, 0)) theirStable++;
-		if (get(mySelf, 1, 1)) theirStable++;
-		if (get(mySelf, 0, 1)) theirStable++;
+		if (get(opp, 1, 0)) theirStable++;
+		if (get(opp, 1, 1)) theirStable++;
+		if (get(opp, 0, 1)) theirStable++;
 	}
 	if (get(mySelf, 7, 0)) {
 		yourStable ++;
@@ -360,9 +360,9 @@ int Board::betterHeuristic() {
 	}
 	else if (get(opp, 7, 0)) {
 		theirStable ++;
-		if (get(mySelf, 6, 0)) theirStable++;
-		if (get(mySelf, 6, 1)) theirStable++;
-		if (get(mySelf, 7, 1)) theirStable++;
+		if (get(opp, 6, 0)) theirStable++;
+		if (get(opp, 6, 1)) theirStable++;
+		if (get(opp, 7, 1)) theirStable++;
 	}
 	if (get(mySelf, 0, 7)) {
 		yourStable ++;
@@ -372,9 +372,9 @@ int Board::betterHeuristic() {
 	}
 	else if (get(opp, 0, 7)) {
 		theirStable ++;
-		if (get(mySelf, 1, 7)) theirStable++;
-		if (get(mySelf, 1, 6)) theirStable++;
-		if (get(mySelf, 0, 6)) theirStable++;
+		if (get(opp, 1, 7)) theirStable++;
+		if (get(opp, 1, 6)) theirStable++;
+		if (get(opp, 0, 6)) theirStable++;
 	}
 	if (get(mySelf, 7, 7)) {
 		yourStable ++;
@@ -384,12 +384,29 @@ int Board::betterHeuristic() {
 	}
 	else if (get(opp, 7, 7)) {
 		theirStable ++;
-		if (get(mySelf, 6, 7)) theirStable++;
-		if (get(mySelf, 6, 6)) theirStable++;
-		if (get(mySelf, 7, 6)) theirStable++;
+		if (get(opp, 6, 7)) theirStable++;
+		if (get(opp, 6, 6)) theirStable++;
+		if (get(opp, 7, 6)) theirStable++;
 	}
 	
-	return (stoneDiff + (yourStable - theirStable) * 30);
+	int myEdges = 0, theirEdges = 0;
+	
+	for (int i = 2; i < 5; i++) {
+		if (get(mySelf, i, 0)) myEdges++;
+		else if(get(opp, i, 0)) theirEdges++;
+		if (get(mySelf, 0, i)) myEdges++;
+		else if(get(opp, 0, i)) theirEdges++;
+		if (get(mySelf, i, 7)) myEdges++;
+		else if(get(opp, i, 7)) theirEdges++;
+		if (get(mySelf, 7, i)) myEdges++;
+		else if(get(opp, 7, i)) theirEdges++;
+	}
+	
+	int myMoves = getNumMoves(mySelf);
+	int theirMoves = getNumMoves(opp);
+		
+	return (stoneDiff + (yourStable - theirStable) * 30 + 
+	(myEdges - theirEdges)*15 + (myMoves-theirMoves)*10);
 }
 
 /*
@@ -407,6 +424,17 @@ void Board::setBoard(char data[]) {
             taken.set(i);
         }
     }
+}
+
+int Board::getNumMoves(Side side) {
+	int count = 0;
+	for (int i = 0; i < 7; i++) {
+		for (int j = 0; j < 7; j++) {
+			Move move(i, j);
+			if (checkMove(&move, side)) count++;
+		}
+	}
+	return count;
 }
 
 /* Once we get a corner square, then the squares next to it become stable

@@ -44,6 +44,7 @@ public:
 	int betterHeuristic();
 	int getBest(int depth, int player, bool testing, bool topLevel);
     void setBoard(char data[]);
+    int getNumMoves(Side side);
     void setCornerScore(int indices, Side me);
 	void printBoard();
 };
