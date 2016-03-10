@@ -210,6 +210,68 @@ int Board::getBest(int depth, int player, bool testing, bool topLevel) {
 } 
 
 /*
+ * Does the minimax to find the best move to make and its score using alpha
+ * beta pruning to avoid looking at branches that neither the opponent nor
+ * you will want to pick
+ */
+
+int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel) {
+	// Figures out which color the current move is for
+	Side side;
+	if (player == 1)
+		side = mySelf;
+	else side = opp;
+	// If there are no valid moves for this player or we have reached
+	// maximum depth, reutrn the score of the board right now
+	if((hasMoves(side) == -1) || depth <= 0) {
+		return betterHeuristic() * player;
+	}
+	// Find the best move and score
+	bool changed = false;
+	bool leave = false;
+	for (int i = 0; i < 8; i++) {
+		for (int j = 0; j < 8;j++) {
+			Move *possMove = new Move(i, j);
+			// Check if a move is valid and if it is, do the move, and 
+			// find the score of doing minimax on that
+			// board for the opposite player
+			if (checkMove(possMove, side)) {
+				doMove(possMove, side);
+				int score = -1*alphabeta(depth - 1, -beta, -alpha, -player, false);
+				// If this move yields a higher score than so far, do
+				// it and if we are in the top level of recursion, change
+				// the move we must to do to this move
+				if (score > alpha) {
+					std::cerr << "Score greater than alpha" << std::endl;
+					alpha = score;
+					if (topLevel) {
+						std::cerr << "Set a move" << std::endl;
+						moveToDo->setX(possMove->getX());
+						moveToDo->setY(possMove->getY());
+					}
+					changed = true;
+				}
+				if (score >= beta) leave = true;
+				// Delete memory allocated for variables we don't need
+				// anymore and undo the move we have done
+				undoMove();
+			}
+			if (possMove != NULL) delete possMove;
+			if (leave) break;
+		}
+		if (leave) break;
+	}
+	// If we couldn't find any best move, just set the move we need to
+	// do to -1, which is a flag to the player that there are no moves left
+	if (!changed) {
+		moveToDo->setX(-1);
+	}
+	return alpha;
+} 
+
+
+
+/*
  * Modifies the board to reflect the specified move.
  */
 void Board::doMove(Move *m, Side side) {

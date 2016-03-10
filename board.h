@@ -43,6 +43,7 @@ public:
 	int basicHeuristic();
 	int betterHeuristic();
 	int getBest(int depth, int player, bool testing, bool topLevel);
+	int alphabeta(int depth, int alpha, int beta, int player, bool topLevel);
     void setBoard(char data[]);
     int getNumMoves(Side side);
     void setCornerScore(int indices, Side me);
