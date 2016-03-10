@@ -8,12 +8,16 @@
 #include <stdlib.h>
 #include <stack>
 using namespace std;
+#include <stdint.h>
 
 class Board {
    
 private:
-    bitset<64> black;
-    bitset<64> taken;    
+    //bitset<64> black;
+    //bitset<64> taken;
+    // (bottom right to top left)    
+    long unsigned int black1, black2;
+    long unsigned int taken1, taken2;
     std::vector<int> simpleScores;
        
     bool occupied(int x, int y);
