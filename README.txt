@@ -1,6 +1,8 @@
 radagast.se/othello/Help/strategy.html
 
-the cornell heuristic functio
+the cornell heuristic function
+
+Bitboard - pages.cs.wisc.edu/~psilord/blog/data/chess-pages/rep.html
 
 Number yours - Number Theirs
 
@@ -27,3 +29,5 @@ Recurse to depth 5
 	for each move we try out (Since DFS) on just one board --> Creating many boards would be too time intensive
 
 	Seems to work - Can beat BetterPlayer in under 2 minutes total, but am not able to recurse to depth 6 due to allocation issues (not sure what?)
+
+Also eventually, have a different depth if running out of time!!!
