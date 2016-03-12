@@ -26,7 +26,8 @@ private:
     bool onBoard(int x, int y);\
     int myFrontierSquares;
     int theirFrontierSquares;
-      
+   	int numOpen;
+
 public:
 	static std::stack<int> *moves;
     Board(Side side);
@@ -36,7 +37,7 @@ public:
     Side mySelf;
     Side opp;
     Move *moveToDo;
-	
+	   
     bool isDone();
     int hasMoves(Side side);
     int bestMove(Side side);

@@ -25,7 +25,7 @@ Board::Board(Side side) {
 	simpleScores[14] *= 3;
 	simpleScores[49] *= 3;
 	simpleScores[54] *= 3;
-
+	numOpen = 0;
 	myFrontierSquares = 0;
 	theirFrontierSquares = 0;
 	// Print out the scores given to boxes for error checking purposes
@@ -556,10 +556,12 @@ int Board::betterHeuristic() {
 	
 	int myMoves = getMyNumMoves();
 	int theirMoves = getOppNumMoves();
-		
+	if (numOpen < 5) {
+		return stoneDiff*40 + (yourStable - theirStable) * 20;
+	}
 	return (stoneDiff + (yourStable - theirStable) * 30 + 
-	(myEdges - theirEdges)*15 + (myMoves-theirMoves)*10 + 
-	(theirFrontierSquares - myFrontierSquares)*10);
+	(myEdges - theirEdges)*15 + (myMoves-theirMoves)*20 + 
+	(theirFrontierSquares - myFrontierSquares)*5);
 }
 
 /*
@@ -610,15 +612,17 @@ void Board::setBoard(char data[]) {
 
 int Board::getMyNumMoves(){
 	int count = 0;
-	int myFrontierSquares = 0;
+	myFrontierSquares = 0;
+	numOpen = 0;
 	for (int i = 0; i < 7; i++) {
 		for (int j = 0; j < 7; j++) {
+			if (!taken[i+j*8]) numOpen++;
 			Move move(i, j);
 			if (checkMove(&move, mySelf)) count++;
 			if (get(mySelf, i, j)) {
 				for(int dx = -1; dx <=1; dx++) {
 					for (int dy = -1; dy <=1; dy++) {
-						if (!taken[dx+dy*8]) {
+						if (onBoard(i+dx, j+dy) && !taken[(i+dx)+(j+dy)*8]) {
 							myFrontierSquares ++;
 						}
 					}
@@ -631,7 +635,7 @@ int Board::getMyNumMoves(){
 
 int Board::getOppNumMoves() {
 	int count = 0;
-	int theirFrontierSquares = 0;
+	theirFrontierSquares = 0;
 	for (int i = 0; i < 7; i++) {
 		for (int j = 0; j < 7; j++) {
 			Move move(i, j);
@@ -639,7 +643,7 @@ int Board::getOppNumMoves() {
 			if (get(opp, i, j)) {
 				for(int dx = -1; dx <=1; dx++) {
 					for (int dy = -1; dy <=1; dy++) {
-						if (!taken[dx+dy*8]) {
+						if (onBoard(i+dx, j+dy) && !taken[(i+dx)+(j+dy)*8]) {
 							theirFrontierSquares ++;
 						}
 					}
