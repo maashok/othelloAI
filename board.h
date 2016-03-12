@@ -23,7 +23,9 @@ private:
     bool occupied(int x, int y);
     bool get(Side side, int x, int y);
     void set(Side side, int x, int y);
-    bool onBoard(int x, int y);
+    bool onBoard(int x, int y);\
+    int myFrontierSquares;
+    int theirFrontierSquares;
       
 public:
 	static std::stack<int> *moves;
@@ -49,7 +51,8 @@ public:
 	int getBest(int depth, int player, bool testing, bool topLevel);
 	int alphabeta(int depth, int alpha, int beta, int player, bool topLevel);
     void setBoard(char data[]);
-    int getNumMoves(Side side);
+    int getMyNumMoves();
+    int getOppNumMoves();
     void setCornerScore(int indices, Side me);
 	void printBoard();
 };

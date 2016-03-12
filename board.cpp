@@ -26,6 +26,8 @@ Board::Board(Side side) {
 	simpleScores[49] *= 3;
 	simpleScores[54] *= 3;
 
+	myFrontierSquares = 0;
+	theirFrontierSquares = 0;
 	// Print out the scores given to boxes for error checking purposes
 	/*(for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8; j++) {
@@ -258,12 +260,11 @@ int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel) 
 		side = mySelf;
 	else side = opp;
 	// If there are no valid moves for this player or we have reached
-	// maximum depth, reutrn the score of the board right now
+	// maximum depth, return the score of the board right now
 	if((hasMoves(side) == -1) || depth <= 0) {
-		return betterHeuristic() * player;
+		return betterHeuristic()*player;
 	}
 	// Find the best move and score
-	bool changed = false;
 	bool leave = false;
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8;j++) {
@@ -278,14 +279,11 @@ int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel) 
 				// it and if we are in the top level of recursion, change
 				// the move we must to do to this move
 				if (score > alpha) {
-					std::cerr << "Score greater than alpha" << std::endl;
 					alpha = score;
 					if (topLevel) {
-						std::cerr << "Set a move" << std::endl;
 						moveToDo->setX(possMove->getX());
 						moveToDo->setY(possMove->getY());
 					}
-					changed = true;
 				}
 				if (score >= beta) leave = true;
 				// Delete memory allocated for variables we don't need
@@ -293,15 +291,10 @@ int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel) 
 				undoMove();
 			}
 			if (possMove != NULL) delete possMove;
-			if (leave) break;
+			if (leave) return alpha;
 		}
-		if (leave) break;
 	}
-	// If we couldn't find any best move, just set the move we need to
-	// do to -1, which is a flag to the player that there are no moves left
-	if (!changed) {
-		moveToDo->setX(-1);
-	}
+
 	return alpha;
 } 
 
@@ -396,7 +389,7 @@ void Board::undoMove() {
 		// If our top value is -5, we have reached the point where the moves
 		// before are actual moves already done
 		if (top == -5) return;
-		// The moves are encoded as move = x + y*8 + side, where side is
+		// The moves are encoded as move = x + y*8 + 100*side, where side is
 		// 0 if the square was empty before, 1 if it was black before, 
 		// and 2 if it was white before
 		if (top < 100) {
@@ -561,11 +554,12 @@ int Board::betterHeuristic() {
 		else if(get(opp, 7, i)) theirEdges++;
 	}
 	
-	int myMoves = getNumMoves(mySelf);
-	int theirMoves = getNumMoves(opp);
+	int myMoves = getMyNumMoves();
+	int theirMoves = getOppNumMoves();
 		
 	return (stoneDiff + (yourStable - theirStable) * 30 + 
-	(myEdges - theirEdges)*15 + (myMoves-theirMoves)*10);
+	(myEdges - theirEdges)*15 + (myMoves-theirMoves)*10 + 
+	(theirFrontierSquares - myFrontierSquares)*10);
 }
 
 /*
@@ -614,12 +608,43 @@ void Board::setBoard(char data[]) {
     }*/
 }
 
-int Board::getNumMoves(Side side) {
+int Board::getMyNumMoves(){
 	int count = 0;
+	int myFrontierSquares = 0;
 	for (int i = 0; i < 7; i++) {
 		for (int j = 0; j < 7; j++) {
 			Move move(i, j);
-			if (checkMove(&move, side)) count++;
+			if (checkMove(&move, mySelf)) count++;
+			if (get(mySelf, i, j)) {
+				for(int dx = -1; dx <=1; dx++) {
+					for (int dy = -1; dy <=1; dy++) {
+						if (!taken[dx+dy*8]) {
+							myFrontierSquares ++;
+						}
+					}
+				}
+			}
+		}
+	}
+	return count;
+}
+
+int Board::getOppNumMoves() {
+	int count = 0;
+	int theirFrontierSquares = 0;
+	for (int i = 0; i < 7; i++) {
+		for (int j = 0; j < 7; j++) {
+			Move move(i, j);
+			if (checkMove(&move, opp)) count++;
+			if (get(opp, i, j)) {
+				for(int dx = -1; dx <=1; dx++) {
+					for (int dy = -1; dy <=1; dy++) {
+						if (!taken[dx+dy*8]) {
+							theirFrontierSquares ++;
+						}
+					}
+				}
+			}
 		}
 	}
 	return count;
