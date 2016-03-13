@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <stack>
 using namespace std;
+#include <string>
 #include <stdint.h>
 
 class Board {
@@ -19,7 +20,7 @@ private:
     //long unsigned int black1, black2;
     //long unsigned int taken1, taken2;
     std::vector<int> simpleScores;
-       
+	HashTable *ht;
     bool occupied(int x, int y);
     bool get(Side side, int x, int y);
     void set(Side side, int x, int y);
@@ -33,7 +34,7 @@ public:
     Board(Side side);
     ~Board();
     Board *copy();
-        
+
     Side mySelf;
     Side opp;
     Move *moveToDo;
@@ -55,6 +56,8 @@ public:
     int getMyNumMoves();
     int getOppNumMoves();
     void setCornerScore(int indices, Side me);
+    std::string hash();
+    void addToHashTable(std::string hashVal, int move, int alpha);
 	void printBoard();
 };
 
