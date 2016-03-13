@@ -281,9 +281,22 @@ int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel) 
 	// Find the best move and score
 	bool leave = false;
 	
-	
-	
-	
+	if (topLevel && moveToDo->x != -1 && moveToDo->y != -1) {
+		doMove(moveToDo, side);
+		int score = -1*alphabeta(depth - 1, -beta, -alpha, -player, false);
+		// If this move yields a higher score than so far, do
+		// it and if we are in the top level of recursion, change
+		// the move we must to do to this move
+		if (score > alpha) {
+			alpha = score;
+		}
+		else {
+			moveToDo->setX(-1);
+			moveToDo->setY(-1);
+		}
+		undoMove();
+	}
+		
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8;j++) {
 			Move *possMove = new Move(i, j);

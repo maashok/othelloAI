@@ -84,14 +84,16 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 	// advanced heuristic...
 	else {
 		//board->getBest(5, 1, false, true);
-		//board->alphabeta(5, -100000000, 100000000, 1, true);
 		board->printBoard();
-		if (board->countBlack() + board->countWhite() > 40) {
-			std::cerr << "Longer search" << std::endl;
-			board->alphabeta(14, -100000000, 100000000, 1, true);
-		}
-		else {
-			board->alphabeta(8, -100000000, 100000000, 1, true);
+		board->alphabeta(7, -100000000, 100000000, 1, true);
+		if (msLeft > 100000) { // Change this to either 3/4 minutes
+			if (board->countBlack() + board->countWhite() > 40) {
+				std::cerr << "Longer search" << std::endl;
+				board->alphabeta(15, -100000000, 100000000, 1, true);
+			}
+			else {
+				board->alphabeta(8, -100000000, 100000000, 1, true);
+			}
 		}
 		Move *goodMove = new Move(board->moveToDo->getX(), board->moveToDo->getY());
 		// After we got a move, we will reset the next move to be -1 for now
