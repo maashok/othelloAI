@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <stack>
 using namespace std;
-#include <string>
+#include <map>
 #include <cstdint>
 
 class Board {
@@ -16,13 +16,12 @@ class Board {
 private:
     //bitset<64> black;
     //bitset<64> taken;
-    // (bottom right to top left)  
     
     uint64_t blackb, takenb;  
     uint64_t one = 1;
 
     std::vector<int> simpleScores;
-	std::unordered_map<bitBoard, int> hashTable;
+	//std::map<uint64_t, int> hashTable;
     bool occupied(int x, int y);
     bool get(Side side, int x, int y);
     void set(Side side, int x, int y);
@@ -59,8 +58,8 @@ public:
     int getOppNumMoves();
     void setCornerScore(int indices, Side me);
     std::string boardRepresentation();
-    int hash();
-    void addToHashTable(int hashVal, std::string boardRep, int move, int alpha);
+    bitBoard hashFind();
+    void addToHashTable(uint64_t hashVal,  int alpha);
 	void printBoard();
 };
 

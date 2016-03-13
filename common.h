@@ -111,6 +111,5 @@ struct bitBoard
 		black = b;
 		taken = t;
 	}
-}
-
+};
 #endif

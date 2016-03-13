@@ -30,6 +30,7 @@ Board::Board(Side side) {
 	simpleScores[49] *= 3;
 	simpleScores[54] *= 3;
 	numOpen = 0;
+		
 	myFrontierSquares = 0;
 	theirFrontierSquares = 0;
 	// Print out the scores given to boxes for error checking purposes
@@ -61,8 +62,7 @@ Board::Board(Side side) {
     taken.set(4 + 8 * 3);
     taken.set(4 + 8 * 4);
     black.set(4 + 8 * 3);
-    black.set(3 + 8 * 4);    */
-	printBoard();
+    black.set(3 + 8 * 4);    */	
 }
 
 /*
@@ -262,10 +262,12 @@ int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel) 
 	if((hasMoves(side) == -1) || depth <= 0) {
 		return betterHeuristic()*player;
 	}
-	std::string boardRep = boardRepresentation();
-	int val = hashTable.find(hash(blackb, takenb));
-	if (val != -1) {
-		int alpha = val/100;
+	//bitBoard hashVal = hashFind();
+	/*uint64_t hashVal = blackb;
+	int val = hashTable[blackb];*/
+	/*if (!topLevel && val != 0) {
+		std::cerr << "Found things in hash table" << std::endl;
+		int alpha = val;
 		int moveDid =abs(val)%100;
 		if (!topLevel)
 			return alpha;
@@ -275,9 +277,10 @@ int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel) 
 			return alpha;
 		}
 	}
-
+*/
 	// Find the best move and score
 	bool leave = false;
+	
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8;j++) {
 			Move *possMove = new Move(i, j);
@@ -304,23 +307,24 @@ int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel) 
 			}
 			if (possMove != NULL) delete possMove;
 			if (leave) {
-				addToHashTable(66, alpha);
+				//addToHashTable(hashVal, alpha);
 				return alpha;
 			}
 		}
 	}
-	if (topLevel)
-		addToHashTable(moveToDo->x + moveToDo->y*8, alpha);
+	/*if (topLevel)
+		//addToHashTable(hashVal, alpha);
 	else
-		addToHashTable(66, alpha);
+		//addToHashTable(hashVal, alpha*/
 	return alpha;
 } 
 
-void Board::addToHashTable(int move, int alpha) {
+/*void Board::addToHashTable(uint64_t hashVal, int alpha) {
+	std::cerr << "I add something" << std::endl;
 	if (alpha < 0)
-		hashTable.add(hash(blackb, takenb), -move - abs(100*alpha));
-	else hashTable.add(hash(blackb, takenb), move + 100*alpha);
-}
+		hashTable.insert(std::pair<uint64_t, int>(hashVal, alpha));
+	else hashTable.insert(std::pair<uint64_t, int>(hashVal, alpha));
+}*/
 
 /*
  * Modifies the board to reflect the specified move.
@@ -703,6 +707,6 @@ void Board::printBoard() {
 	std::cerr << std::endl;
 }
 
-bitBoard Board::hash() {
+bitBoard Board::hashFind() {
 	return bitBoard(blackb, takenb);
 }

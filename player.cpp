@@ -84,8 +84,13 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 	// advanced heuristic...
 	else {
 		//board->getBest(5, 1, false, true);
-
-		board->alphabeta(9, -100000000, 100000000, 1, true);
+		//board->alphabeta(5, -100000000, 100000000, 1, true);
+		if (msLeft > 640000)
+			board->alphabeta(9, -100000000, 100000000, 1, true);
+		else {
+			std::cerr << "Shorter time" << std::endl;
+			board->alphabeta(7, -100000000, 100000000, 1, true);
+		}
 		Move *goodMove = new Move(board->moveToDo->getX(), board->moveToDo->getY());
 		// After we got a move, we will reset the next move to be -1 for now
 		board->moveToDo->setX(-1);
