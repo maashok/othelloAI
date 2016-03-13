@@ -74,11 +74,11 @@ struct Node
 	}
 };
 
-struct HashTable
+struct linkedList
 {
 	Node *first;
 	int size;
-	HashTable() {
+	linkedList() {
 		first = NULL;
 		size = 0;
 	}
@@ -93,7 +93,7 @@ struct HashTable
 			first = new Node(key, val);
 			size++;
 		}
-		else if (size > 200) {
+		else if (size > 10) {
 			first->replace(key, val);
 		}
 		else {

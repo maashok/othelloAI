@@ -37,7 +37,9 @@ Board::Board(Side side) {
 	}
 	*/
 	
-	ht = new HashTable();
+	for (int i = 0; i < 64; i++)
+		hashTable[i] = new linkedList();
+	
 
 	moveToDo = new Move(-1, -1);
 	/*black1 = 0b00000000000000000000000000001000;
@@ -266,8 +268,9 @@ int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel) 
 	if((hasMoves(side) == -1) || depth <= 0) {
 		return betterHeuristic()*player;
 	}
-	std::string hashVal = hash();
-	int val = ht->find(hashVal);
+	std::string boardRep = boardRepresentation();
+	int hashVal = hash();
+	int val = hashTable[hashVal]->find(boardRep);
 	if (val != -1) {
 		int alpha = val/100;
 		int moveDid = val%100;
@@ -279,7 +282,7 @@ int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel) 
 			return alpha;
 		}
 	}
-	
+
 	// Find the best move and score
 	bool leave = false;
 	for (int i = 0; i < 8; i++) {
@@ -308,20 +311,20 @@ int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel) 
 			}
 			if (possMove != NULL) delete possMove;
 			if (leave) {
-				addToHashTable(hashVal, 66, alpha);
+				addToHashTable(hashVal, boardRep, 66, alpha);
 				return alpha;
 			}
 		}
 	}
 	if (topLevel)
-		addToHashTable(hashVal, moveToDo->x + moveToDo->y*8, alpha);
+		addToHashTable(hashVal, boardRep, moveToDo->x + moveToDo->y*8, alpha);
 	else
-		addToHashTable(hashVal, 66, alpha);
+		addToHashTable(hashVal, boardRep, 66, alpha);
 	return alpha;
 } 
 
-void Board::addToHashTable(std::string hashVal, int move, int alpha) {	
-	ht->add(hashVal, move + 100*alpha);
+void Board::addToHashTable(int hashVal, std::string boardRep, int move, int alpha) {	
+	hashTable[hashVal]->add(boardRep, move + 100*alpha);
 }
 
 /*
@@ -732,8 +735,11 @@ void Board::printBoard() {
 	std::cerr << taken2 << std::endl;*/
 }
 
+int Board::hash() {
+	return countBlack();
+}
 
-std::string Board::hash() {
+std::string Board::boardRepresentation() {
 	std::string h = "";
 	for (int i = 1; i < 64; i++) {
 		if (taken[i]) {

@@ -20,7 +20,7 @@ private:
     //long unsigned int black1, black2;
     //long unsigned int taken1, taken2;
     std::vector<int> simpleScores;
-	HashTable *ht;
+	linkedList *hashTable[64];
     bool occupied(int x, int y);
     bool get(Side side, int x, int y);
     void set(Side side, int x, int y);
@@ -56,8 +56,9 @@ public:
     int getMyNumMoves();
     int getOppNumMoves();
     void setCornerScore(int indices, Side me);
-    std::string hash();
-    void addToHashTable(std::string hashVal, int move, int alpha);
+    std::string boardRepresentation();
+    int hash();
+    void addToHashTable(int hashVal, std::string boardRep, int move, int alpha);
 	void printBoard();
 };
 

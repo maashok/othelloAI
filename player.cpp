@@ -84,7 +84,7 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 	else {
 		//board->getBest(5, 1, false, true);
 
-		board->alphabeta(8, -100000000, 100000000, 1, true);
+		board->alphabeta(9, -100000000, 100000000, 1, true);
 		Move *goodMove = new Move(board->moveToDo->getX(), board->moveToDo->getY());
 		// After we got a move, we will reset the next move to be -1 for now
 		board->moveToDo->setX(-1);
