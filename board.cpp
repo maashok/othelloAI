@@ -40,9 +40,6 @@ Board::Board(Side side) {
 		std::cerr << std::endl;
 	}
 	*/
-	
-	for (int i = 0; i < 64; i++)
-		hashTable[i] = new linkedList();
 
 	moveToDo = new Move(-1, -1);
 	/*black1 = 0b00000000000000000000000000001000;
@@ -266,15 +263,13 @@ int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel) 
 		return betterHeuristic()*player;
 	}
 	std::string boardRep = boardRepresentation();
-	int hashVal = hash();
-	int val = hashTable[hashVal]->find(boardRep);
+	int val = hashTable.find(hash(blackb, takenb));
 	if (val != -1) {
 		int alpha = val/100;
-		int moveDid = val%100;
+		int moveDid =abs(val)%100;
 		if (!topLevel)
 			return alpha;
 		if (topLevel && moveDid < 64) {
-			if (moveDid%8 == -2 && moveDid/8 == -4) std::cerr << "CHANGED HERE TO NEG NUM" << std::endl; 
 			moveToDo->setX(moveDid%8);
 			moveToDo->setY(moveDid/8);
 			return alpha;
@@ -309,20 +304,22 @@ int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel) 
 			}
 			if (possMove != NULL) delete possMove;
 			if (leave) {
-				addToHashTable(hashVal, boardRep, 66, alpha);
+				addToHashTable(66, alpha);
 				return alpha;
 			}
 		}
 	}
 	if (topLevel)
-		addToHashTable(hashVal, boardRep, moveToDo->x + moveToDo->y*8, alpha);
+		addToHashTable(moveToDo->x + moveToDo->y*8, alpha);
 	else
-		addToHashTable(hashVal, boardRep, 66, alpha);
+		addToHashTable(66, alpha);
 	return alpha;
 } 
 
-void Board::addToHashTable(int hashVal, std::string boardRep, int move, int alpha) {	
-	hashTable[hashVal]->add(boardRep, move + 100*alpha);
+void Board::addToHashTable(int move, int alpha) {
+	if (alpha < 0)
+		hashTable.add(hash(blackb, takenb), -move - abs(100*alpha));
+	else hashTable.add(hash(blackb, takenb), move + 100*alpha);
 }
 
 /*
@@ -706,19 +703,6 @@ void Board::printBoard() {
 	std::cerr << std::endl;
 }
 
-int Board::hash() {
-	if (mySelf == WHITE) return countBlack();
-	return countWhite();
-}
-
-std::string Board::boardRepresentation() {
-	std::string h = "";
-	for (int i = 1; i < 64; i++) {
-		if (takenb & (one << i)) {
-			if (blackb & (one << i)) h += "1";
-			else h += "2";
-		}
-		else h += " ";
-	}
-	return h;
+bitBoard Board::hash() {
+	return bitBoard(blackb, takenb);
 }

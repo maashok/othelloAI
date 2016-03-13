@@ -22,7 +22,7 @@ private:
     uint64_t one = 1;
 
     std::vector<int> simpleScores;
-	linkedList *hashTable[64];
+	std::unordered_map<bitBoard, int> hashTable;
     bool occupied(int x, int y);
     bool get(Side side, int x, int y);
     void set(Side side, int x, int y);

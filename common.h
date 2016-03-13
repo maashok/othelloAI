@@ -103,5 +103,14 @@ struct linkedList
 	}
 };
 
+struct bitBoard
+{
+	uint64_t black;
+	uint64_t taken;
+	bitBoard(uint64_t b, uint64_t t) {
+		black = b;
+		taken = t;
+	}
+}
 
 #endif
