@@ -85,18 +85,19 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 	else {
 		//board->getBest(5, 1, false, true);
 		//board->alphabeta(5, -100000000, 100000000, 1, true);
-		if (msLeft > 640000)
-			board->alphabeta(9, -100000000, 100000000, 1, true);
+		board->printBoard();
+		if (board->countBlack() + board->countWhite() > 40) {
+			std::cerr << "Longer search" << std::endl;
+			board->alphabeta(14, -100000000, 100000000, 1, true);
+		}
 		else {
-			std::cerr << "Shorter time" << std::endl;
-			board->alphabeta(7, -100000000, 100000000, 1, true);
+			board->alphabeta(8, -100000000, 100000000, 1, true);
 		}
 		Move *goodMove = new Move(board->moveToDo->getX(), board->moveToDo->getY());
 		// After we got a move, we will reset the next move to be -1 for now
 		board->moveToDo->setX(-1);
 		board->moveToDo->setY(-1);
-		std::cerr << goodMove->getX();
-		std::cerr << goodMove->getY() << std::endl;
+
 		if (goodMove->getX() < 0 || goodMove->getY() < 0) return NULL;
 
 		
@@ -109,7 +110,6 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 		board->doMove(goodMove, me);
 		// Push a marker move -5 to signify a permanent move has been done
 		Board::moves->push(-5);
-		std::cerr << "Just did a move" << std::endl;
 
 		return goodMove;
 	}

@@ -281,6 +281,9 @@ int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel) 
 	// Find the best move and score
 	bool leave = false;
 	
+	
+	
+	
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8;j++) {
 			Move *possMove = new Move(i, j);
@@ -454,7 +457,7 @@ int Board::count(Side side) {
  */
 int Board::countBlack() {
    // return black.count();
-    unsigned int j = blackb;
+    uint64_t j = blackb;
 	int index = 0, countBlack = 0;
 	while (index < 64) {
 		if (j & 1) countBlack ++;
@@ -467,7 +470,7 @@ int Board::countBlack() {
  * Current count of white stones.
  */
 int Board::countWhite() {
-	unsigned int i = takenb;
+	uint64_t i = takenb;
 	int index = 0, countTaken = 0;
 	while (index < 64) {
 		if (i & 1) countTaken ++;

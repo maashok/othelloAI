@@ -28,9 +28,10 @@ private:
     bool onBoard(int x, int y);\
     int myFrontierSquares;
     int theirFrontierSquares;
-   	int numOpen;
 
 public:
+   	int numOpen;
+
 	static std::stack<int> *moves;
     Board(Side side);
     ~Board();
