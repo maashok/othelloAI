@@ -83,7 +83,9 @@ struct linkedList
 		size = 0;
 	}
 	int find(std::string search) {
-		if (first == NULL) return -1;
+		if (first == NULL) {
+			return -1;
+		}
 		int x = first->find(search);
 		return x;
 	}

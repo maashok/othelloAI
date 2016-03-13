@@ -22,6 +22,9 @@ private:
 
     std::vector<int> simpleScores;
 	//std::map<uint64_t, int> hashTable;
+	
+	linkedList *hashTable[64];
+	
     bool occupied(int x, int y);
     bool get(Side side, int x, int y);
     void set(Side side, int x, int y);
@@ -59,8 +62,8 @@ public:
     int getOppNumMoves();
     void setCornerScore(int indices, Side me);
     std::string boardRepresentation();
-    bitBoard hashFind();
-    void addToHashTable(uint64_t hashVal,  int alpha);
+    int hashFind();
+    void addToHashTable(int hashVal, std::string rep, int move, int alpha);
 	void printBoard();
 };
 
