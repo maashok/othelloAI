@@ -4,12 +4,16 @@
  * Make a standard 8x8 othello board and initialize it to the standard setup.
  */
 Board::Board(Side side) {
+
 	// Stores what side this board is for
 	mySelf = side;
+
 	if (mySelf == BLACK) opp = WHITE;
 	else opp = BLACK;
+
 	// Store a basic method of assigning scores to different squares
 	simpleScores = vector<int>(64, 1);
+
 	// Corners have the highest score, edges also have high score,
 	// Boxes next to edges and corners have lower scores.
 	for (unsigned int i = 0; i < simpleScores.size(); i++) {
@@ -39,7 +43,6 @@ Board::Board(Side side) {
 	
 	for (int i = 0; i < 64; i++)
 		hashTable[i] = new linkedList();
-	
 
 	moveToDo = new Move(-1, -1);
 	/*black1 = 0b00000000000000000000000000001000;
@@ -49,16 +52,20 @@ Board::Board(Side side) {
 	taken1 = 0b00000000000000000000000000011000;
 	//taken1 = 0b00011000000000000000000000000000;
 	//taken2 = 0b00011000000000000000000000000000;
-	taken2 = 0b00000000000000000000000000011000;
+	taken2 = 0b00000000000000000000000000011000;*/
+	blackb = 0b000000000000000000000000000100000010000000000000000000000000000;
+	
+	takenb = 0b000000000000000000000000001100000011000000000000000000000000000;
 	            
-	//black = 0b0b0000000000000000000000000000100000010000000000000000000000000000;
-   // taken = 0b0000000000000000000000000001(36)1(35)0000001(28)1(27)000000000000000000000000000;*/
-    taken.set(3 + 8 * 3);
+	//blackb = 0b0000000000000000000000000000100000010000000000000000000000000000;
+    //takenb = 0b0000000000000000000000000001100000011000000000000000000000000000;
+   /* taken.set(3 + 8 * 3);
     taken.set(3 + 8 * 4);
     taken.set(4 + 8 * 3);
     taken.set(4 + 8 * 4);
     black.set(4 + 8 * 3);
-    black.set(3 + 8 * 4);    
+    black.set(3 + 8 * 4);    */
+	printBoard();
 }
 
 /*
@@ -76,35 +83,33 @@ Board *Board::copy() {
     newBoard->black2 = black2;
     newBoard->taken1 = taken1;
     newBoard->taken2 = taken2;*/
-    newBoard->black = black;
-    newBoard->taken = taken;
+    
+   // newBoard->black = black;
+   // newBoard->taken = taken;
+    
+    newBoard->blackb = blackb;
+    newBoard->takenb = takenb;
     return newBoard;
 }
 
 bool Board::occupied(int x, int y) {
-    return taken[x + 8*y];
-    /*if (x + y*8 < 32) return taken1 & (1 << (x+y*8));
-    else return taken2 & (1 << (1 << (x+y*8 - 32)));*/
+   // return taken[x + 8*y];
+    
+    return (takenb >> (x+y*8)) & 1;
 }
 
 bool Board::get(Side side, int x, int y) {
-    return occupied(x, y) && (black[x + 8*y] == (side == BLACK));
-    /*if (x + y*8 < 32) 
-		return (occupied(x, y) && ((black1 & (1 << (x + y*8)) )== (side == BLACK)));
-	else return (occupied(x, y) && ((black2 & (1 << (x + y*8 - 32))) == (side == BLACK)));*/
+   // return occupied(x, y) && (black[x + 8*y] == (side == BLACK));
+    
+    return occupied(x, y) && (((blackb >> (x+y*8)) & 1) == (side == BLACK));
 }
 
 void Board::set(Side side, int x, int y) {
-    taken.set(x + 8*y);
-    black.set(x + 8*y, side == BLACK);
-    /*if (x + y*8 < 32) {
-		taken1 = taken1 | (1 << (x+ y*8));
-		black1 = black1 | (side << (x+y*8));
-	}
-	else {
-		taken2 = taken2 | (1 << (x+ y*8 - 32));
-		black2 = black2 | (side << (x+y*8 - 32));
-	}*/
+   // taken.set(x + 8*y);
+   // black.set(x + 8*y, side == BLACK);
+    takenb = takenb | (one << (x+y*8));
+    if (side == BLACK) blackb = blackb | (one << (x+y*8));
+    else blackb = blackb & ~(one << (x+y*8));
 }
 
 bool Board::onBoard(int x, int y) {
@@ -163,17 +168,9 @@ bool Board::checkMove(Move *m, Side side) {
 
     int X = m->getX();
     int Y = m->getY();
-    //if (X == 3 && Y == 2) std::cerr << "Should be valid move" << std::endl;
     // Make sure the square hasn't already been taken.
     if (occupied(X, Y)) return false;
-    /*if (X == 3 && Y == 2) {
-		std::cerr << "Still here" << std::endl;
-		std::cerr << "(3, 3)" << get(opp, 3, 3) << std::endl;
-		std::cerr << "(3, 4)" << get(mySelf, 3, 4) << std::endl;
-		std::cerr << "(4, 3)" << get(opp, 4, 3) << std::endl;
-		std::cerr << "(4, 4)" << get(mySelf, 4, 4) << std::endl;
-		
-    }*/
+
     Side other = (side == BLACK) ? WHITE : BLACK;
     for (int dx = -1; dx <= 1; dx++) {
         for (int dy = -1; dy <= 1; dy++) {
@@ -277,6 +274,7 @@ int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel) 
 		if (!topLevel)
 			return alpha;
 		if (topLevel && moveDid < 64) {
+			if (moveDid%8 == -2 && moveDid/8 == -4) std::cerr << "CHANGED HERE TO NEG NUM" << std::endl; 
 			moveToDo->setX(moveDid%8);
 			moveToDo->setY(moveDid/8);
 			return alpha;
@@ -363,23 +361,18 @@ void Board::doMove(Move *m, Side side) {
                 while (onBoard(x, y) && get(other, x, y)) {
 					// Add the stones we are turning as part of the move
 					// to our stack of moves done
-					if (taken[x+8*y]) {
-					//if (x+y*8 < 32) {
-						//if (taken1 & (1 << (x + y*8))) {	
-							if (black[x+8*y]) Board::moves->push(x + y*8 + 100);
-							//if (black1 & (1 << (x+y*8))) Board::moves->push(x + y*8 + 100);
-							else Board::moves->push(x + y*8 + 200);
+					/*if (taken[x+8*y]) {	
+						if (black[x+8*y]) Board::moves->push(x + y*8 + 100);
+						else Board::moves->push(x + y*8 + 200);
+					}
+					else Board::moves->push(x+y*8);*/
+					
+					if (takenb & (one << (x+8*y))) {
+						if (blackb & (one << (x+8*y))) Board::moves->push(x+y*8 + 100);
+						else Board::moves->push(x+y*8 + 200);
 					}
 					else Board::moves->push(x+y*8);
 					
-					/*else {
-						//if (taken2 & (1 << (x + y*8 - 32))) {	
-							//if (black[x+8*y]) Board::moves->push(x + y*8 + 100);
-							if (black2 & (1 << (x+y*8 - 32))) Board::moves->push(x + y*8 + 100);
-							else Board::moves->push(x + y*8 + 200);
-						}
-						else Board::moves->push(x+y*8);
-					}*/
                     set(side, x, y);
                     x += dx;
                     y += dy;
@@ -419,7 +412,7 @@ void Board::undoMove() {
 		// The moves are encoded as move = x + y*8 + 100*side, where side is
 		// 0 if the square was empty before, 1 if it was black before, 
 		// and 2 if it was white before
-		if (top < 100) {
+		/*if (top < 100) {
 			taken[top] = 0;
 			black[top] = 0;
 		}
@@ -431,34 +424,19 @@ void Board::undoMove() {
 			taken[top%200] = 1;
 			black[top%200] = 0;
 		}
-		/*if (top < 32) {
-			taken1 = taken1 & ~(1 << top);
-			black1 = black1 & ~(1 << top);
-		}
-		else if (top < 100) {
-			taken2 = taken2 & ~(1 << (top-32));
-			black2 = black2 & ~(1 << (top-32));
+		*/
+		if (top < 100) {
+			takenb &= ~(one << top);
+			blackb &= ~(one << top);
 		}
 		else if (top < 200) {
-			if (top < 132) {
-				taken1 = taken1 | (1 << (top%100));
-				black1 = black1 | (1 << (top%100));
-			}
-			else {
-				taken2 = taken2 | (1 << ((top%100) - 32));
-				black2 = black2 | (1 << ((top%100) - 32));
-			}
+			takenb |= (one << top%100);
+			blackb |= (one << top%100);
 		}
 		else {
-			if (top < 232) {
-				taken1 = taken1 | (1 << (top%200));
-				black1 = black1 & ~(1 << (top%200));
-			}
-			else {
-				taken2 = taken2 | (1 << ((top%200) - 32));
-				black2 = black2 & ~(1 << ((top%200) - 32));
-			}
-		}*/
+			takenb |= (one << top%200);
+			blackb &= ~(one << top%200);
+		}
 		Board::moves->pop();
 	}
 }
@@ -474,30 +452,28 @@ int Board::count(Side side) {
  * Current count of black stones.
  */
 int Board::countBlack() {
-    return black.count();
-    /*unsigned int j = black1, i = black2;
+   // return black.count();
+    unsigned int j = blackb;
 	int index = 0, countBlack = 0;
-	while (index < 32) {
+	while (index < 64) {
 		if (j & 1) countBlack ++;
-		if (i & 1) countBlack ++;
-		j = j >> 1; i = i >> 1; index ++;
+		j = j >> 1; index ++;
 	}
-	return countBlack;*/
+	return countBlack;
 }
 
 /*
  * Current count of white stones.
  */
 int Board::countWhite() {
-	/*unsigned int i = taken1, j = taken2;
+	unsigned int i = takenb;
 	int index = 0, countTaken = 0;
-	while (index < 32) {
+	while (index < 64) {
 		if (i & 1) countTaken ++;
-		if (j & 1) countTaken ++;
-		i = i >> 1; j = j >> 1; index ++;
+		i = i >> 1; index ++;
 	}
-	return countTaken - countBlack();*/
-    return taken.count() - black.count();
+	return countTaken - countBlack();
+   // return taken.count() - black.count();
 }
 
 /* 
@@ -596,7 +572,7 @@ int Board::betterHeuristic() {
  * piece and 'b' indicates a black piece. Mainly for testing purposes.
  */
 void Board::setBoard(char data[]) {
-    taken.reset();
+    /*taken.reset();
     black.reset();
     
     for (int i = 1; i < 63; i++) {
@@ -606,35 +582,22 @@ void Board::setBoard(char data[]) {
 		}
 		else if (data[i] == 'w')
 			taken[i] = 1;
-	}
-    /*taken1 = 0;
-    taken2 = 0;
-    black1 = 0;
-    black2 = 0;
-    for (int i = 31; i >= 0; i++) {
-        if (data[i] == 'b') {
-			black1 = (black1 << 1) & 1;
-			taken1 = (taken1 << 1) & 1;
-        } else if (data[i] == 'w') {
-            taken1 = (taken1 << 1) & 1;
-            black1 = black1 << 1;
-        }
-        else {
-			black1 = black1 << 1;
-			taken1 = taken1 << 1;
+	}*/
+	
+	takenb = 0;
+	blackb = 0;
+	
+	for (int i = 0; i < 64; i++) {
+		takenb = takenb << 1;
+		blackb = blackb << 1;
+		if (data[i] == 'b') {
+			takenb |= (one << i);
+			blackb |= (one << i);
 		}
-		if (data[i + 32] == 'b') {
-			black2 = (black2 << 1) & 1;
-			taken2 = (taken2 << 1) & 1;
-		} else if (data[i + 32] == 'w') {
-            taken2 = (taken2 << 1) & 1;
-            black2 = black2 << 1;
-        }
-        else {
-			black2 = black2 << 1;
-			taken2 = taken2 << 1;
+		else if (data[i] == 'w') {
+			takenb |= (one << i);
 		}
-    }*/
+	} 
 }
 
 int Board::getMyNumMoves(){
@@ -643,13 +606,13 @@ int Board::getMyNumMoves(){
 	numOpen = 0;
 	for (int i = 0; i < 7; i++) {
 		for (int j = 0; j < 7; j++) {
-			if (!taken[i+j*8]) numOpen++;
+			if (!(takenb & (one << (i+j*8)))) numOpen++;
 			Move move(i, j);
 			if (checkMove(&move, mySelf)) count++;
 			if (get(mySelf, i, j)) {
 				for(int dx = -1; dx <=1; dx++) {
 					for (int dy = -1; dy <=1; dy++) {
-						if (onBoard(i+dx, j+dy) && !taken[(i+dx)+(j+dy)*8]) {
+						if (onBoard(i+dx, j+dy) && !(takenb & one << ((i+dx)+(j+dy)*8))) {
 							myFrontierSquares ++;
 						}
 					}
@@ -670,7 +633,7 @@ int Board::getOppNumMoves() {
 			if (get(opp, i, j)) {
 				for(int dx = -1; dx <=1; dx++) {
 					for (int dy = -1; dy <=1; dy++) {
-						if (onBoard(i+dx, j+dy) && !taken[(i+dx)+(j+dy)*8]) {
+						if (onBoard(i+dx, j+dy) && !(takenb & one << ((i+dx)+(j+dy)*8))) {
 							theirFrontierSquares ++;
 						}
 					}
@@ -725,25 +688,34 @@ void Board::setCornerScore(int indices, Side me) {
  * purposes.
  */
 void Board::printBoard() {
-	std::cerr << "Taken" << std::endl;
-	for (int i  = 0; i < 64; i++) {
+	/*for (int i  = 0; i < 64; i++) {
 		std::cerr << taken[i];
 	}
-	std::cerr << std::endl;
+	std::cerr << std::endl;*/
 	
-	/*std::cerr << taken1 << std::endl;
-	std::cerr << taken2 << std::endl;*/
+	for (int k = 0; k < 64; k++) {
+		if ((takenb >> k) & 1) {
+			if ((blackb >> k) & 1) {
+				std::cerr << "b|";
+			}
+			else std::cerr << "w|";
+		}
+		else std::cerr << " |";
+		if (k%8 == 7) std::cerr << std::endl;
+	}
+	std::cerr << std::endl;
 }
 
 int Board::hash() {
-	return countBlack();
+	if (mySelf == WHITE) return countBlack();
+	return countWhite();
 }
 
 std::string Board::boardRepresentation() {
 	std::string h = "";
 	for (int i = 1; i < 64; i++) {
-		if (taken[i]) {
-			if (black[i]) h += "1";
+		if (takenb & (one << i)) {
+			if (blackb & (one << i)) h += "1";
 			else h += "2";
 		}
 		else h += " ";

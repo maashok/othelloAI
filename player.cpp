@@ -40,6 +40,7 @@ void Player::setBoard(Board *newBoard) {
  */
 Move *Player::doMove(Move *opponentsMove, int msLeft) {
 	board->doMove(opponentsMove, opp);
+
 	// First do the opponent's move
 	if (opponentsMove != NULL) {
 		Board::moves->push(-5);
@@ -84,12 +85,16 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 	else {
 		//board->getBest(5, 1, false, true);
 
-		board->alphabeta(9, -100000000, 100000000, 1, true);
+		board->alphabeta(3, -100000000, 100000000, 1, true);
 		Move *goodMove = new Move(board->moveToDo->getX(), board->moveToDo->getY());
 		// After we got a move, we will reset the next move to be -1 for now
 		board->moveToDo->setX(-1);
 		board->moveToDo->setY(-1);
-		if (goodMove->getX() == -1) return NULL;
+		std::cerr << goodMove->getX();
+		std::cerr << goodMove->getY() << std::endl;
+		if (goodMove->getX() < 0 || goodMove->getY() < 0) return NULL;
+
+		
 		// We will also undo all moves done after the permanent ones before
 		// pushing the new move on
 		while (!Board::moves->empty() && Board::moves->top() != -5) {
@@ -99,6 +104,7 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 		board->doMove(goodMove, me);
 		// Push a marker move -5 to signify a permanent move has been done
 		Board::moves->push(-5);
+		std::cerr << "Just did a move" << std::endl;
 
 		return goodMove;
 	}

@@ -20,14 +20,16 @@ Edges are good									<-- DID THIS
 
 
 
-Stone Difference + Stable Disc differerence * 30 + Edge Difference * 15 + MovesLeft Difference * 10
+Stone Difference + Stable Disc differerence * 30 + Edge Difference * 15 + MovesLeft Difference * 10 + FrontierSquareDiff * 
 
 Tried lowering score for unstable areas (next to corner) -- led to still consistent wins, but with lower margins
 
-Recurse to depth 5
+Recurse to depth __
 	Was able to do this without taking too much time/memory by keeping a stack of moves done and just undoing moves based on that
 	for each move we try out (Since DFS) on just one board --> Creating many boards would be too time intensive
 
-	Seems to work - Can beat BetterPlayer in under 2 minutes total, but am not able to recurse to depth 6 due to allocation issues (not sure what?)
+	Seems to work - not sure if faster
+
+Also margins of wins decreased with max win at depth 7, fixed???
 
 Also eventually, have a different depth if running out of time!!!

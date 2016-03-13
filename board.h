@@ -9,16 +9,18 @@
 #include <stack>
 using namespace std;
 #include <string>
-#include <stdint.h>
+#include <cstdint>
 
 class Board {
    
 private:
-    bitset<64> black;
-    bitset<64> taken;
-    // (bottom right to top left)    
-    //long unsigned int black1, black2;
-    //long unsigned int taken1, taken2;
+    //bitset<64> black;
+    //bitset<64> taken;
+    // (bottom right to top left)  
+    
+    uint64_t blackb, takenb;  
+    uint64_t one = 1;
+
     std::vector<int> simpleScores;
 	linkedList *hashTable[64];
     bool occupied(int x, int y);
