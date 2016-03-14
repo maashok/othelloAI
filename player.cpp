@@ -85,16 +85,14 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 	// advanced heuristic...
 	else {
 		//board->getBest(5, 1, false, true);
-		board->negascout(7, -100000000, 100000000, 1, true, true, 0);
+		/*board->negascout(7, -100000000, 100000000, 1, true, true, 0);
 		 Move *goodMove = new Move(board->moveToDo->getX(), board->moveToDo->getY());
-		if (msLeft > 100000 && haveTime) { // Change this to either 3/4 minutes
+		if (msLeft > 180000 && haveTime) { // Change this to either 3/4 minutes
 			int sc = 0;
 			if (board->countBlack() + board->countWhite() > 43) {
-				std::cerr << "This depth" << std::endl;
 				sc = board->negascout(16, -100000000, 100000000, 1, true, true, 0.);
 			}
 			else if (board->countBlack() + board->countWhite() > 32) {
-				std::cerr << "THIS" << std::endl;
 				sc = board->negascout(12, -100000000, 100000000, 1, true, true, 0.);
 			}
 			else {
@@ -106,10 +104,35 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 				goodMove->setY(board->moveToDo->getY());
 			}
 			else if (abs(sc) == 65 && board->moveToDo->getX() == -3) {
-				std::cerr << "NO MORE TIME" << std::endl;
+				std::cerr << "Run out of time" << std::endl;
+				haveTime = false;
+			}
+		}*/
+		
+		board->alphabeta(7, -100000000, 100000000, 1, true, 0);
+		 Move *goodMove = new Move(board->moveToDo->getX(), board->moveToDo->getY());
+		if (msLeft > 180000 && haveTime) { // Change this to either 3/4 minutes
+			int sc = 0;
+			if (board->countBlack() + board->countWhite() > 43) {
+				sc = board->alphabeta(16, -100000000, 100000000, 1, true, 0.);
+			}
+			else if (board->countBlack() + board->countWhite() > 32) {
+				sc = board->alphabeta(12, -100000000, 100000000, 1, true, 0.);
+			}
+			else {
+				sc = board->alphabeta(8, -100000000, 100000000, 1, true, 0.);
+			}
+			
+			if (abs(sc) != 65) {
+				goodMove->setX(board->moveToDo->getX());
+				goodMove->setY(board->moveToDo->getY());
+			}
+			else if (abs(sc) == 65 && board->moveToDo->getX() == -3) {
+				std::cerr << "Run out of time" << std::endl;
 				haveTime = false;
 			}
 		}
+		
 		
 		// After we got a move, we will reset the next move to be -1 for now
 		board->moveToDo->setX(-1);
