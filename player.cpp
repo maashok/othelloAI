@@ -13,6 +13,10 @@ Player::Player(Side side) {
 	// Save what side we are and what side the opponent is on
 	me = side;
 	opp = (side == WHITE) ? BLACK : WHITE;
+	// Change the depth of search at different points depending on whether
+	// playing white or black
+	if (me == BLACK) depth = 44;
+	else depth = 43;
 	haveTime = true;
 }
 
@@ -84,37 +88,49 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 	// Otherwise, this will be implemented better later to include more
 	// advanced heuristic...
 	else {
-		//board->getBest(5, 1, false, true);
-		/*board->negascout(7, -100000000, 100000000, 1, true, true, 0);
+		// Call negascout, which is an improvement over plain alpha beta pruning
+		// to take less time
+		// Does an initial search of depth 5
+		board->negascout(7, -100000000, 100000000, 1, true, true, 0);
+		 // Save the search result for the initial depth
 		 Move *goodMove = new Move(board->moveToDo->getX(), board->moveToDo->getY());
-		if (msLeft > 180000 && haveTime) { // Change this to either 3/4 minutes
+		 // If we have 3 minutes left and haven't had to exit a recursive
+		 // call before, search at greater depth
+		if (msLeft > 180000 && haveTime) {
 			int sc = 0;
-			if (board->countBlack() + board->countWhite() > 43) {
+			// If more than 43-44 squares on the board have been taken
+			// can search at great depth
+			if (board->countBlack() + board->countWhite() > depth) {
 				sc = board->negascout(16, -100000000, 100000000, 1, true, true, 0.);
 			}
+			// If more than 32 squares have been taken, can search at medium depth
 			else if (board->countBlack() + board->countWhite() > 32) {
 				sc = board->negascout(12, -100000000, 100000000, 1, true, true, 0.);
 			}
+			// Otherwise, just search at depth 8
 			else {
 				sc = board->negascout(8, -100000000, 100000000, 1, true, true, 0.);
 			}
-			
+			// Will return +/- 65 as score if ran out of time, so if that
+			// is the score, don't use result of newer calculation
 			if (abs(sc) != 65) {
 				goodMove->setX(board->moveToDo->getX());
 				goodMove->setY(board->moveToDo->getY());
 			}
+			// If we did run out of time, then don't search big depth again
 			else if (abs(sc) == 65 && board->moveToDo->getX() == -3) {
 				std::cerr << "Run out of time" << std::endl;
 				haveTime = false;
 			}
-		}*/
+		}
 		
-		board->alphabeta(7, -100000000, 100000000, 1, true, 0);
+		// All the same type of calls, but using alpha beta instead of negascout
+		/*board->alphabeta(7, -100000000, 100000000, 1, true, 0);
 		 Move *goodMove = new Move(board->moveToDo->getX(), board->moveToDo->getY());
 		if (msLeft > 180000 && haveTime) { // Change this to either 3/4 minutes
 			int sc = 0;
-			if (board->countBlack() + board->countWhite() > 43) {
-				sc = board->alphabeta(16, -100000000, 100000000, 1, true, 0.);
+			if (board->countBlack() + board->countWhite() > depth) {
+				sc = board->alphabeta(17, -100000000, 100000000, 1, true, 0.);
 			}
 			else if (board->countBlack() + board->countWhite() > 32) {
 				sc = board->alphabeta(12, -100000000, 100000000, 1, true, 0.);
@@ -131,7 +147,7 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 				std::cerr << "Run out of time" << std::endl;
 				haveTime = false;
 			}
-		}
+		}*/
 		
 		
 		// After we got a move, we will reset the next move to be -1 for now
@@ -180,10 +196,10 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 	
 	// The Basic Heuristic, that doesn't look ahead into the future
 	// but still chooses squares based on the position's score
-    int bestCoord = board->bestMove(me);
+   /* int bestCoord = board->bestMove(me);
 	if (bestCoord == -1) return NULL;
     Move *best = new Move(bestCoord/8, bestCoord%8);
 	board->doMove(best, me);
-    return best; 
+    return best; */
     
 }

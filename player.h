@@ -15,6 +15,7 @@ public:
     Player(Side side);
     ~Player();
     bool haveTime;
+	int depth;
     void setBoard(Board *newBoard);
     Move *doMove(Move *opponentsMove, int msLeft);
 

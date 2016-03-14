@@ -34,23 +34,17 @@ Board::Board(Side side) {
 	myFrontierSquares = 0;
 	theirFrontierSquares = 0;
 	
+	// Create the transposition table
 	for (int i = 0; i < 64; i++) {
 		hashTable[i] = new linkedList();
 	}
 
 	moveToDo = new Move(-1, -1);
 	
+	// Use bitboards instead of the more memory intensive bitset
 	blackb = 0b000000000000000000000000000100000010000000000000000000000000000;
 	takenb = 0b000000000000000000000000001100000011000000000000000000000000000;
-	            
-	//blackb = 0b0000000000000000000000000000100000010000000000000000000000000000;
-    //takenb = 0b0000000000000000000000000001100000011000000000000000000000000000;
-   /* taken.set(3 + 8 * 3);
-    taken.set(3 + 8 * 4);
-    taken.set(4 + 8 * 3);
-    taken.set(4 + 8 * 4);
-    black.set(4 + 8 * 3);
-    black.set(3 + 8 * 4);    */	
+
 }
 
 /*
@@ -64,13 +58,6 @@ Board::~Board() {
  */
 Board *Board::copy() {
     Board *newBoard = new Board(this->mySelf);
-    /*newBoard->black1 = black1;
-    newBoard->black2 = black2;
-    newBoard->taken1 = taken1;
-    newBoard->taken2 = taken2;*/
-    
-   // newBoard->black = black;
-   // newBoard->taken = taken;
     
     newBoard->blackb = blackb;
     newBoard->takenb = takenb;
@@ -78,20 +65,14 @@ Board *Board::copy() {
 }
 
 bool Board::occupied(int x, int y) {
-   // return taken[x + 8*y];
-    
     return (takenb >> (x+y*8)) & 1;
 }
 
-bool Board::get(Side side, int x, int y) {
-   // return occupied(x, y) && (black[x + 8*y] == (side == BLACK));
-    
+bool Board::get(Side side, int x, int y) {    
     return occupied(x, y) && (((blackb >> (x+y*8)) & 1) == (side == BLACK));
 }
 
 void Board::set(Side side, int x, int y) {
-   // taken.set(x + 8*y);
-   // black.set(x + 8*y, side == BLACK);
     takenb = takenb | (one << (x+y*8));
     if (side == BLACK) blackb = blackb | (one << (x+y*8));
     else blackb = blackb & ~(one << (x+y*8));
@@ -240,11 +221,13 @@ int Board::getBest(int depth, int player, bool testing, bool topLevel) {
  */
 
 int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel, double timeTaken) {
+	// If the recursive calls are taking too much time, exit
 	if (timeTaken > 240) {
 		std::cerr << "RUN OUT OF TIME" << std::endl;
 		moveToDo->setX(-3);
 		return 65;
 	}
+	// Find the start time
 	time_t startTime, endTime;
 	time(&startTime);
 	// Figures out which color the current move is for
@@ -257,21 +240,28 @@ int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel, 
 	if((hasMoves(side) == -1) || depth <= 0) {
 		return betterHeuristic()*player;
 	}
-
+	// Find the hash value of the current state of the board and check
+	// if it is already in the hash table
 	int hashVal = hashFind();
 	std::string rep = boardRepresentation();
 	int val = hashTable[hashVal]->find(rep);
 	if (val != -1) {
-		int alpha = val/100;
+		// Find the alpha value and the move done
+		int alph = val/100;
 		int moveDid = abs(val)%100;
+		// If a move was done in this case, and it wasn't just alpha stored
+		// do that move and check it at the correct depth now
 		if (moveDid < 64) {
 			doMove(moveToDo, side);
 			time (&endTime);
 			int score = -1*alphabeta(depth - 1, -beta, -alpha, -player, false, difftime(endTime, startTime) + timeTaken);
+			// Check if it took too much time
 			if (abs(score) == 65 && moveToDo->x == -3) {
 				undoMove();
 				return 65;
 			}
+			// If this score is bigger than current alpha then make it
+			// the alpha
 			if (score > alpha) {
 				alpha = score;
 				moveToDo->setX(moveDid%8);
@@ -329,6 +319,9 @@ int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel, 
 						moveToDo->setY(possMove->getY());
 					}
 				}
+				// If the score is greater than beta, we know our opponent
+				// never would have let us do well, or we would have never
+				// let our opponent do so well, so we can cut off the branch
 				if (score >= beta) leave = true;
 				undoMove();
 				// Delete memory allocated for variables we don't need
@@ -348,7 +341,10 @@ int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel, 
 	return alpha;
 } 
 
+// An improved version of alpha beta pruning, in which if we are not 
+// looking at the first child, we can do a narrow window search first
 int Board::negascout(int depth, int alpha, int beta, int player, bool topLevel, bool firstChild, double timeTaken) {
+	// If we have taken too much time, then leave
 	if (timeTaken > 300) {
 		moveToDo->setX(-3);
 		return 65;
@@ -365,12 +361,13 @@ int Board::negascout(int depth, int alpha, int beta, int player, bool topLevel, 
 	if((hasMoves(side) == -1) || depth <= 0) {
 		return betterHeuristic()*player;
 	}
-
+	// Gets the hash value for the current board and then sees if it is already
+	// in the hash table. If so, then do the move it entails.
 	int hashVal = hashFind();
 	std::string rep = boardRepresentation();
 	int val = hashTable[hashVal]->find(rep);
 	if (val != -1) {
-		int alpha = val/100;
+		int alph = val/100;
 		int moveDid = abs(val)%100;
 		if (moveDid < 64) {
 			doMove(moveToDo, side);
@@ -393,6 +390,8 @@ int Board::negascout(int depth, int alpha, int beta, int player, bool topLevel, 
 	bool leave = false;
 	bool first = true;
 	
+	// If it is the top level and we have a moveToDo from a previous
+	// iteration, try that out first
 	if (topLevel && moveToDo->x != -1 && moveToDo->y != -1) {
 		doMove(moveToDo, side);
 		time (&endTime);
@@ -418,17 +417,21 @@ int Board::negascout(int depth, int alpha, int beta, int player, bool topLevel, 
 		for (int j = 0; j < 8;j++) {
 			Move *possMove = new Move(i, j);
 			// Check if a move is valid and if it is, do the move, and 
-			// find the score of doing minimax on that
+			// find the score of doing negascout on that
 			// board for the opposite player
 			if (checkMove(possMove, side)) {
 				doMove(possMove, side);
 				time (&endTime);
 				int score;
+				// If it is not the first child, can do a narrow window search
+				// and adjust search acocrdingly
 				if (!first) {
 					score = -1*negascout(depth - 1, -alpha - 1, -alpha, -player, false, first, difftime(endTime, startTime) + timeTaken);
 					if (score < beta && score > alpha)
 						score = -1*negascout(depth - 1, -beta, -score, -player, false, first, difftime(endTime, startTime) + timeTaken);
 				}
+				// If it is the first child, do negascout as you would for
+				// any other thing.
 				else
 					score = -1*negascout(depth - 1, -beta, -alpha, -player, false, first, difftime(endTime, startTime) + timeTaken);
 				first = false;
@@ -465,7 +468,9 @@ int Board::negascout(int depth, int alpha, int beta, int player, bool topLevel, 
 	return alpha;
 } 
 
-
+/*
+ * Adds to the hash table
+ */
 void Board::addToHashTable(int hashVal, std::string rep, int move, int alpha) {
 	if (alpha < 0) 
 		hashTable[hashVal]->add(rep, -(move + 100*abs(alpha)));
@@ -507,13 +512,7 @@ void Board::doMove(Move *m, Side side) {
                 y += dy;
                 while (onBoard(x, y) && get(other, x, y)) {
 					// Add the stones we are turning as part of the move
-					// to our stack of moves done
-					/*if (taken[x+8*y]) {	
-						if (black[x+8*y]) Board::moves->push(x + y*8 + 100);
-						else Board::moves->push(x + y*8 + 200);
-					}
-					else Board::moves->push(x+y*8);*/
-					
+					// to our stack of moves done					
 					if (takenb & (one << (x+8*y))) {
 						if (blackb & (one << (x+8*y))) Board::moves->push(x+y*8 + 100);
 						else Board::moves->push(x+y*8 + 200);
@@ -559,19 +558,6 @@ void Board::undoMove() {
 		// The moves are encoded as move = x + y*8 + 100*side, where side is
 		// 0 if the square was empty before, 1 if it was black before, 
 		// and 2 if it was white before
-		/*if (top < 100) {
-			taken[top] = 0;
-			black[top] = 0;
-		}
-		else if (top < 200) {
-			taken[top%100] = 1;
-			black[top%100] = 1;
-		}
-		else {
-			taken[top%200] = 1;
-			black[top%200] = 0;
-		}
-		*/
 		if (top < 100) {
 			takenb &= ~(one << top);
 			blackb &= ~(one << top);
@@ -599,7 +585,6 @@ int Board::count(Side side) {
  * Current count of black stones.
  */
 int Board::countBlack() {
-   // return black.count();
     uint64_t j = blackb;
 	int index = 0, countBlack = 0;
 	while (index < 64) {
@@ -620,7 +605,6 @@ int Board::countWhite() {
 		i = i >> 1; index ++;
 	}
 	return countTaken - countBlack();
-   // return taken.count() - black.count();
 }
 
 /* 
@@ -719,18 +703,6 @@ int Board::betterHeuristic() {
  * piece and 'b' indicates a black piece. Mainly for testing purposes.
  */
 void Board::setBoard(char data[]) {
-    /*taken.reset();
-    black.reset();
-    
-    for (int i = 1; i < 63; i++) {
-		if (data[i] == 'b') {
-			taken[i] = 1;
-			black[i] = 1;
-		}
-		else if (data[i] == 'w')
-			taken[i] = 1;
-	}*/
-	
 	takenb = 0;
 	blackb = 0;
 	
@@ -747,6 +719,10 @@ void Board::setBoard(char data[]) {
 	} 
 }
 
+/*
+ * Returns the number of moves my program's player has, also updating
+ * the number of open and frontier squares.
+ */
 int Board::getMyNumMoves(){
 	int count = 0;
 	myFrontierSquares = 0;
@@ -770,6 +746,10 @@ int Board::getMyNumMoves(){
 	return count;
 }
 
+/*
+ * Returns the number of moves my opponent's player has, also updating
+ * the number of frontier squares.
+ */
 int Board::getOppNumMoves() {
 	int count = 0;
 	theirFrontierSquares = 0;
@@ -853,6 +833,9 @@ void Board::printBoard() {
 	std::cerr << std::endl;
 }
 
+/*
+ * Makes a string representation of the board.
+ */
 std::string Board::boardRepresentation() {
 	std::string h = "";
 	for (int i = 1; i < 64; i++) {
@@ -865,7 +848,9 @@ std::string Board::boardRepresentation() {
 	return h;
 }
 
-
+/*
+ * Finds the hash value of the board (There is repetition)
+ */
 int Board::hashFind() {
 	if (mySelf == BLACK) return countWhite();
 	else return countBlack();
