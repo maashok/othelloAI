@@ -247,7 +247,7 @@ int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel, 
 	int val = hashTable[hashVal]->find(rep);
 	if (val != -1) {
 		// Find the alpha value and the move done
-		int alph = val/100;
+		//int alph = val/100;
 		int moveDid = abs(val)%100;
 		// If a move was done in this case, and it wasn't just alpha stored
 		// do that move and check it at the correct depth now
@@ -367,7 +367,7 @@ int Board::negascout(int depth, int alpha, int beta, int player, bool topLevel, 
 	std::string rep = boardRepresentation();
 	int val = hashTable[hashVal]->find(rep);
 	if (val != -1) {
-		int alph = val/100;
+		//int alph = val/100;
 		int moveDid = abs(val)%100;
 		if (moveDid < 64) {
 			doMove(moveToDo, side);
