@@ -348,6 +348,124 @@ int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel, 
 	return alpha;
 } 
 
+int Board::negascout(int depth, int alpha, int beta, int player, bool topLevel, bool firstChild, double timeTaken) {
+	if (timeTaken > 300) {
+		moveToDo->setX(-3);
+		return 65;
+	}
+	time_t startTime, endTime;
+	time(&startTime);
+	// Figures out which color the current move is for
+	Side side;
+	if (player == 1)
+		side = mySelf;
+	else side = opp;
+	// If there are no valid moves for this player or we have reached
+	// maximum depth, return the score of the board right now
+	if((hasMoves(side) == -1) || depth <= 0) {
+		return betterHeuristic()*player;
+	}
+
+	int hashVal = hashFind();
+	std::string rep = boardRepresentation();
+	int val = hashTable[hashVal]->find(rep);
+	if (val != -1) {
+		int alpha = val/100;
+		int moveDid = abs(val)%100;
+		if (moveDid < 64) {
+			doMove(moveToDo, side);
+			time (&endTime);
+			int score = -1*negascout(depth - 1, -beta, -alpha, -player, false, true, difftime(endTime, startTime) + timeTaken);
+			if (abs(score) == 65 && moveToDo->x == -3) {
+				undoMove();
+				return 65;
+			}
+			if (score > alpha) {
+				alpha = score;
+				moveToDo->setX(moveDid%8);
+				moveToDo->setY(moveDid/8);
+			}
+			undoMove();
+		}
+	}
+
+	// Find the best move and score
+	bool leave = false;
+	bool first = true;
+	
+	if (topLevel && moveToDo->x != -1 && moveToDo->y != -1) {
+		doMove(moveToDo, side);
+		time (&endTime);
+		int score = -1*alphabeta(depth - 1, -beta, -alpha, -player, false, difftime(endTime, startTime) + timeTaken);
+		if (abs(score) == 65 && moveToDo->x == -3) {
+			undoMove();
+			return 65;
+		}
+		// If this move yields a higher score than so far, do
+		// it and if we are in the top level of recursion, change
+		// the move we must to do to this move
+		if (score > alpha) {
+			alpha = score;
+		}
+		else {
+			moveToDo->setX(-1);
+			moveToDo->setY(-1);
+		}
+		undoMove();
+	}
+
+	for (int i = 0; i < 8; i++) {
+		for (int j = 0; j < 8;j++) {
+			Move *possMove = new Move(i, j);
+			// Check if a move is valid and if it is, do the move, and 
+			// find the score of doing minimax on that
+			// board for the opposite player
+			if (checkMove(possMove, side)) {
+				doMove(possMove, side);
+				time (&endTime);
+				int score;
+				if (!first) {
+					score = -1*negascout(depth - 1, -alpha - 1, -alpha, -player, false, first, difftime(endTime, startTime) + timeTaken);
+					if (score < beta && score > alpha)
+						score = -1*negascout(depth - 1, -beta, -score, -player, false, first, difftime(endTime, startTime) + timeTaken);
+				}
+				else
+					score = -1*negascout(depth - 1, -beta, -alpha, -player, false, first, difftime(endTime, startTime) + timeTaken);
+				first = false;
+				if (abs(score) == 65 && moveToDo->x == -3) {
+					undoMove();
+					return 65;
+				}
+				// If this move yields a higher score than so far, do
+				// it and if we are in the top level of recursion, change
+				// the move we must to do to this move
+				if (score > alpha) {
+					alpha = score;
+					if (topLevel) {
+						moveToDo->setX(possMove->getX());
+						moveToDo->setY(possMove->getY());
+					}
+				}
+				if (alpha >= beta) leave = true;
+				undoMove();
+				// Delete memory allocated for variables we don't need
+				// anymore and undo the move we have done
+			}
+			if (possMove != NULL) delete possMove;
+			if (leave) {
+			//	addToHashTable(hashVal, rep, 66, alpha);
+				return alpha;
+			}
+		}
+	}
+	//if (topLevel)
+	//	addToHashTable(hashVal, rep, moveToDo->x + moveToDo->y*8, alpha);
+	//else
+	//	addToHashTable(hashVal, rep, 66, alpha);
+	return alpha;
+} 
+
+
 void Board::addToHashTable(int hashVal, std::string rep, int move, int alpha) {
 	if (alpha < 0) 
 		hashTable[hashVal]->add(rep, -(move + 100*abs(alpha)));

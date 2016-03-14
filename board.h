@@ -58,6 +58,7 @@ public:
 	int betterHeuristic();
 	int getBest(int depth, int player, bool testing, bool topLevel);
 	int alphabeta(int depth, int alpha, int beta, int player, bool topLevel, double timeTaken);
+    int negascout(int depth, int alpha, int beta, int player, bool topLevel, bool firstChild, double timeTaken);
     void setBoard(char data[]);
     int getMyNumMoves();
     int getOppNumMoves();
