@@ -14,6 +14,7 @@ class Player {
 public:
     Player(Side side);
     ~Player();
+    bool haveTime;
     void setBoard(Board *newBoard);
     Move *doMove(Move *opponentsMove, int msLeft);
 

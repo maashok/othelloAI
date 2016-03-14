@@ -7,6 +7,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <stack>
+#include <time.h>
 using namespace std;
 #include <map>
 #include <cstdint>
@@ -56,7 +57,7 @@ public:
 	int basicHeuristic();
 	int betterHeuristic();
 	int getBest(int depth, int player, bool testing, bool topLevel);
-	int alphabeta(int depth, int alpha, int beta, int player, bool topLevel);
+	int alphabeta(int depth, int alpha, int beta, int player, bool topLevel, double timeTaken);
     void setBoard(char data[]);
     int getMyNumMoves();
     int getOppNumMoves();

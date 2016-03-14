@@ -239,7 +239,14 @@ int Board::getBest(int depth, int player, bool testing, bool topLevel) {
  * you will want to pick
  */
 
-int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel) {
+int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel, double timeTaken) {
+	if (timeTaken > 240) {
+		std::cerr << "RUN OUT OF TIME" << std::endl;
+		moveToDo->setX(-3);
+		return 65;
+	}
+	time_t startTime, endTime;
+	time(&startTime);
 	// Figures out which color the current move is for
 	Side side;
 	if (player == 1)
@@ -259,7 +266,12 @@ int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel) 
 		int moveDid = abs(val)%100;
 		if (moveDid < 64) {
 			doMove(moveToDo, side);
-			int score = -1*alphabeta(depth - 1, -beta, -alpha, -player, false);
+			time (&endTime);
+			int score = -1*alphabeta(depth - 1, -beta, -alpha, -player, false, difftime(endTime, startTime) + timeTaken);
+			if (abs(score) == 65 && moveToDo->x == -3) {
+				undoMove();
+				return 65;
+			}
 			if (score > alpha) {
 				alpha = score;
 				moveToDo->setX(moveDid%8);
@@ -274,7 +286,12 @@ int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel) 
 	
 	if (topLevel && moveToDo->x != -1 && moveToDo->y != -1) {
 		doMove(moveToDo, side);
-		int score = -1*alphabeta(depth - 1, -beta, -alpha, -player, false);
+		time (&endTime);
+		int score = -1*alphabeta(depth - 1, -beta, -alpha, -player, false, difftime(endTime, startTime) + timeTaken);
+		if (abs(score) == 65 && moveToDo->x == -3) {
+			undoMove();
+			return 65;
+		}
 		// If this move yields a higher score than so far, do
 		// it and if we are in the top level of recursion, change
 		// the move we must to do to this move
@@ -296,7 +313,12 @@ int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel) 
 			// board for the opposite player
 			if (checkMove(possMove, side)) {
 				doMove(possMove, side);
-				int score = -1*alphabeta(depth - 1, -beta, -alpha, -player, false);
+				time (&endTime);
+				int score = -1*alphabeta(depth - 1, -beta, -alpha, -player, false, difftime(endTime, startTime) + timeTaken);
+				if (abs(score) == 65 && moveToDo->x == -3) {
+					undoMove();
+					return 65;
+				}
 				// If this move yields a higher score than so far, do
 				// it and if we are in the top level of recursion, change
 				// the move we must to do to this move
@@ -308,9 +330,9 @@ int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel) 
 					}
 				}
 				if (score >= beta) leave = true;
+				undoMove();
 				// Delete memory allocated for variables we don't need
 				// anymore and undo the move we have done
-				undoMove();
 			}
 			if (possMove != NULL) delete possMove;
 			if (leave) {
@@ -569,7 +591,7 @@ int Board::betterHeuristic() {
 	if (numOpen < 5) {
 		return stoneDiff*40 + (yourStable - theirStable) * 20;
 	}
-	return (stoneDiff + (yourStable - theirStable) * 35 + 
+	return (stoneDiff + (yourStable - theirStable) * 30 + 
 	(myEdges - theirEdges)*15 + (myMoves-theirMoves)*20 + 
 	(theirFrontierSquares - myFrontierSquares)*5);
 }
