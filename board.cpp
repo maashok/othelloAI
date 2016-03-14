@@ -569,7 +569,7 @@ int Board::betterHeuristic() {
 	if (numOpen < 5) {
 		return stoneDiff*40 + (yourStable - theirStable) * 20;
 	}
-	return (stoneDiff + (yourStable - theirStable) * 30 + 
+	return (stoneDiff + (yourStable - theirStable) * 35 + 
 	(myEdges - theirEdges)*15 + (myMoves-theirMoves)*20 + 
 	(theirFrontierSquares - myFrontierSquares)*5);
 }

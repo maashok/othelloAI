@@ -84,10 +84,12 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 	// advanced heuristic...
 	else {
 		//board->getBest(5, 1, false, true);
-		board->printBoard();
 		board->alphabeta(7, -100000000, 100000000, 1, true);
 		if (msLeft > 100000) { // Change this to either 3/4 minutes
-			if (board->countBlack() + board->countWhite() > 32) {
+			if (board->countBlack() + board->countWhite() > 43) {
+				board->alphabeta(15, -100000000, 100000000, 1, true);
+			}
+			else if (board->countBlack() + board->countWhite() > 32) {
 				board->alphabeta(12, -100000000, 100000000, 1, true);
 			}
 			else {

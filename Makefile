@@ -1,5 +1,5 @@
 CC          = g++
-CFLAGS      = -Wall -ansi -pedantic -ggdb -std=c++1y
+CFLAGS      = -Wall -ansi -pedantic -std=c++1y -O3
 OBJS        = player.o board.o
 PLAYERNAME  = Eeyore
 
