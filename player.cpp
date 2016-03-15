@@ -101,7 +101,7 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 			// If more than 43-44 squares on the board have been taken
 			// can search at great depth
 			if (board->countBlack() + board->countWhite() > depth) {
-				sc = board->negascout(16, -100000000, 100000000, 1, true, true, 0.);
+				sc = board->negascout(20, -100000000, 100000000, 1, true, true, 0.);
 			}
 			// If more than 32 squares have been taken, can search at medium depth
 			else if (board->countBlack() + board->countWhite() > 32) {
