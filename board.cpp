@@ -223,7 +223,6 @@ int Board::getBest(int depth, int player, bool testing, bool topLevel) {
 int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel, double timeTaken) {
 	// If the recursive calls are taking too much time, exit
 	if (timeTaken > 240) {
-		std::cerr << "RUN OUT OF TIME" << std::endl;
 		moveToDo->setX(-3);
 		return 65;
 	}
@@ -345,7 +344,7 @@ int Board::alphabeta(int depth, int alpha, int beta, int player, bool topLevel, 
 // looking at the first child, we can do a narrow window search first
 int Board::negascout(int depth, int alpha, int beta, int player, bool topLevel, bool firstChild, double timeTaken) {
 	// If we have taken too much time, then leave
-	if (timeTaken > 300) {
+	if (timeTaken > 240) {
 		moveToDo->setX(-3);
 		return 65;
 	}
@@ -815,11 +814,7 @@ void Board::setCornerScore(int indices, Side me) {
  * purposes.
  */
 void Board::printBoard() {
-	/*for (int i  = 0; i < 64; i++) {
-		std::cerr << taken[i];
-	}
-	std::cerr << std::endl;*/
-	
+
 	for (int k = 0; k < 64; k++) {
 		if ((takenb >> k) & 1) {
 			if ((blackb >> k) & 1) {

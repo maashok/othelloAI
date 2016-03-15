@@ -119,7 +119,6 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 			}
 			// If we did run out of time, then don't search big depth again
 			else if (abs(sc) == 65 && board->moveToDo->getX() == -3) {
-				std::cerr << "Run out of time" << std::endl;
 				haveTime = false;
 			}
 		}
